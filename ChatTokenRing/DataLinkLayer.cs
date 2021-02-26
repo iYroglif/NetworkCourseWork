@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-//using System.IO.Ports;
 
 namespace ChatTokenRing
 {
@@ -19,27 +18,15 @@ namespace ChatTokenRing
             Uplink, // Кадр разрыва соединения
             ACK,    // Кадр подтверждения безошибочного приема тестового сообщения
             Ret     // Кадр запроса повторения последнего отправленного кадра
-            /* old
-            /// Установка логического соединения.
-            Link,
-            /// Получение списка пользователей.
-            Ask,
-            /// Отправка сообщений пользователя.
-            I,
-            /// Отправка запроса на переотправку сообщения.
-            Ret,
-            /// Разъединение соединения.
-            Uplink
-            */
         }
 
         public byte destination;            // Адрес получателя
         public byte departure;              // Адрес отправителя
         public Type type;                   // Тип кадра
         public byte? data_length = null;    // Длина поля данных
-        public byte?[] data = null;         // Данные
+        public byte[] data = null;          // Данные
 
-        public Frame(byte dep, Type type, byte? des = null, byte?[] bytes = null)
+        public Frame(byte dep, Type type, byte? des = null, byte[] bytes = null)
         {
             departure = dep;
             this.type = type;
@@ -190,7 +177,7 @@ namespace ChatTokenRing
                 {
                     // Добавить проверку того что длина данных не больше чем весь массив байтов
                     data_length = bytes[4];
-                    data = new byte?[(byte)data_length];
+                    data = new byte[(byte)data_length];
                     for (i = 0; i < data_length; ++i)
                     {
                         data[i] = bytes[i + 5];
@@ -206,60 +193,6 @@ namespace ChatTokenRing
                 return true;
             }
         }
-        /* old
-        public int authorID;
-        public string message;
-
-        public Frame()
-        {
-            // ..
-        }
-
-        public Frame(List<byte> data)
-        {
-            this.data = data;
-
-            byte typeByte = data[0];
-            switch (typeByte)
-            {
-                case (byte)Type.Link:
-                    this.type = Type.Link;
-                    break;
-
-                case (byte)Type.Ask:
-                    this.type = Type.Ask;
-                    break;
-
-                case (byte)Type.I:
-                    this.type = Type.I;
-                    this.authorID = (int)data[1];
-
-                    byte[] byteArray = data.ToArray();
-
-                    int messageLength = data.Count - 2;
-                    byte[] messageData = new byte[messageLength];
-
-                    Array.Copy(byteArray, 2, messageData, 0, messageLength);
-
-                    this.message = System.Text.Encoding.UTF8.GetString(messageData, 0, messageData.Length);
-
-                    break;
-
-                case (byte)Type.Ret:
-                    this.type = Type.Ret;
-                    break;
-
-                case (byte)Type.Uplink:
-                    this.type = Type.Uplink;
-                    break;
-
-                default:
-                    this.type = Type.Link;
-                    break;
-            }
-
-        }
-        */
 
         public static explicit operator byte[](Frame frame)
         {
@@ -300,7 +233,7 @@ namespace ChatTokenRing
         {
             // !!! Установка физического соединения
 
-            SendFrame(new Frame(/* ??? свой адрес */0, Frame.Type.Link, bytes: /* ??? данные со своим адресом и ником */ new byte?[1] { 0 }));
+            SendFrame(new Frame(/* ??? свой адрес */0, Frame.Type.Link, bytes: /* ??? данные со своим адресом и ником */ new byte[1] { 0 }));
         }
 
         /// <summary>
@@ -319,7 +252,7 @@ namespace ChatTokenRing
         public void CloseConnection()
         {
             SendFrame(new Frame(/* ??? свой адрес */0, Frame.Type.Uplink));
-            HandleFrame(new byte[1] { 0 });
+            // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
         }
 
         /// <summary>
@@ -330,168 +263,69 @@ namespace ChatTokenRing
             Frame frame = new Frame();
             if (!frame.TryConvertFromBytes(bytes))
             {
+                SendFrame(new Frame(/* ??? свой адрес */0, Frame.Type.Ret, des:/* ??? по идее соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */1));
                 // Ошибка: нужен запрос на повторную отправку и повторная отправка
             }
             else
             {
+                switch (frame.type)
+                {
+                    case Frame.Type.I:
+                        if ((frame.destination == 0x7F) || (frame.destination == /* ??? свой адрес */0))
+                        {
+                            SendFrame(new Frame(/* ??? свой адрес */0, Frame.Type.ACK, des: frame.departure));
+                            // !!! Передача сообщения на пользовательский уровень frame.data
+                            if (frame.destination == 0x7F)
+                            {
+                                SendFrame(frame);
+                            }
+                        }
+                        else
+                        {
+                            SendFrame(frame);
+                        }
+                        break;
 
+                    case Frame.Type.Link:
+                        Dictionary<byte, string> users = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).ToDictionary<byte, string>;
+                        // !!! Передача списка пользователей на пользовательский уровень
+                        if (!users.ContainsKey(/* ??? свой адрес */0))
+                        {
+                            users.Add(/* ??? свой адрес */0, /* ??? свой ник */"nick");
+                            frame.data = Encoding.UTF8.GetBytes(users.ToString());
+                            frame.data_length = (byte?)frame.data.Length;
+                        }
+                        SendFrame(frame);
+                        break;
+
+                    case Frame.Type.Uplink:
+                        SendFrame(frame);
+                        // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+                        break;
+
+                    case Frame.Type.ACK:
+                        if (frame.destination == /* ??? свой адрес */0)
+                        {
+                            // ???
+                        }
+                        else
+                        {
+                            SendFrame(frame);
+                        }
+                        break;
+
+                    case Frame.Type.Ret:
+                        if (frame.destination == /* ??? свой адрес */0)
+                        {
+                            SendFrame(lastFrame); // ??? Просто последний отправленный кадр или последний отправленный кадр данному пользователю? 
+                        }
+                        else
+                        {
+                            SendFrame(frame);
+                        }
+                        break;
+                }
             }
-
-            switch (frame.type)
-            {
-                case Frame.Type.Link:
-
-                    this.notificationLabel.Invoke((MethodInvoker)delegate
-                    {
-
-                        // Running on the UI thread
-                        this.notificationLabel.Text = "Соединение установлено";
-                        this.connectButton.Text = "Войти";
-                    });
-
-                    // Если станция не ведущая, то отправляем дальше
-                    if (currentConnection.isMaster == false)
-                    {
-                        this.SendFrame(frame);
-                    }
-
-                    break;
-
-                case Frame.Type.Ask:
-
-                    // Если станция не ведущая, то отправляем дальше
-                    if (currentConnection.isMaster == false)
-                    {
-                        this.SendFrame(frame);
-                    }
-
-                    break;
-
-                case Frame.Type.Data:
-
-                    this.chatBox.Invoke((MethodInvoker)delegate
-                    {
-
-                        // Running on the UI thread
-                        this.chatBox.Items.Add(string.Format("{0} ({1}) {2}", DateTime.Now.ToString("hh:mm"), frame.authorID, frame.message));
-                    });
-
-                    // Если станция не ялвяется отправителем, то отправляем дальше
-                    if (currentSession.username != frame.authorID)
-                    {
-                        this.SendFrame(frame);
-                    }
-
-                    break;
-
-                case Frame.Type.Error:
-
-                    // Если станция не ведущая, то отправляем дальше
-                    if (currentConnection.isMaster == false)
-                    {
-                        this.SendFrame(frame);
-                    }
-
-                    break;
-
-                case Frame.Type.Downlink:
-
-                    // Если станция не ведущая, то отправляем дальше
-                    if (currentConnection.isMaster == false)
-                    {
-                        this.SendFrame(frame);
-                    }
-
-                    System.Windows.Forms.Application.Exit();
-
-                    break;
-            }
-        }
-
-        // -----------------------------------------------------------------------
-        public Label notificationLabel;
-        public Button connectButton;
-        public ListBox chatBox;
-
-        private NetworkService()
-        {
-            // ..
-        }
-
-        private static readonly NetworkService _sharedService = new NetworkService();
-
-        public static NetworkService GetSharedService()
-        {
-            return _sharedService;
-        }
-
-        /// Текущее соединение
-        public Connection currentConnection;
-
-        /// Текущая сессия
-        public Session currentSession;
-
-
-
-
-        /// <summary>
-        /// Обработка пришедшего сообщения
-        /// </summary>
-        public void HandleMessage(List<byte> message)
-        {
-            Frame frame = new Frame(message);
-            this.HandleFrame(frame);
-        }
-
-
-
-
-
-        public void SendMessage(string message)
-        {
-            byte[] byteStr = System.Text.Encoding.UTF8.GetBytes(message);
-
-            List<byte> data = new List<byte>();
-
-            data.Add((byte)Frame.Type.Data);
-            data.Add((byte)currentSession.username);
-
-            foreach (byte b in byteStr)
-            {
-                data.Add(b);
-            }
-
-            Frame frame = new Frame();
-            frame.data = data;
-
-            this.SendFrame(frame);
-        }
-
-        /// <summary>
-        /// Список доступных портов
-        /// </summary>
-        public string[] GetPortsNames()
-        {
-            return SerialPort.GetPortNames();
-        }
-
-        /// <summary>
-        /// Создание сессии
-        /// </summary>
-        public void CreateSession(int username)
-        {
-            this.currentSession = new Session(username);
-
-            // формирование кадра c username..
-            // отправка кадра c username..
-        }
-
-        /// <summary>
-        /// Закрытие сессии
-        /// </summary>
-        public void CloseSession()
-        {
-            // ..
         }
     }
 }
