@@ -24,5 +24,15 @@ namespace ChatTokenRing
         {
             InitializeComponent();
         }
+
+        private void button1_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void D_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

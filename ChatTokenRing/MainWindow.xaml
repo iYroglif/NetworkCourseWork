@@ -7,6 +7,15 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <CheckBox x:Name="D" Content="Ведущая станция" HorizontalAlignment="Left" Margin="97,173,0,0" VerticalAlignment="Top" Height="37" Width="160" IsThreeState="True" IsChecked="True" Checked="D_Checked"/>
+        <Button x:Name="button" Content="Установить соединение" HorizontalAlignment="Left" Height="40" Margin="287,170,0,0" VerticalAlignment="Top" Width="376"/>
+        <Label x:Name="label" Content="Исходящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="97,25,0,0" VerticalAlignment="Top" Width="160"/>
+        <Label x:Name="label_Copy" Content="Входящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="97,94,0,0" VerticalAlignment="Top" Width="160"/>
+        <ListBox x:Name="listBox" HorizontalAlignment="Left" Height="30" Margin="287,25,0,0" VerticalAlignment="Top" Width="376"/>
+        <ListBox x:Name="listBox_Copy" HorizontalAlignment="Left" Height="30" Margin="287,94,0,0" VerticalAlignment="Top" Width="376"/>
+        <Label x:Name="label_Copy1" Content="Имя пользователя" HorizontalAlignment="Left" Height="30" Margin="97,260,0,0" VerticalAlignment="Top" Width="160"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="30" Margin="287,260,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="260"/>
+        <Button x:Name="button1" Content="Войти" HorizontalAlignment="Left" Margin="564,261,0,0" VerticalAlignment="Top" Width="99" Height="29" Click="button1_Click"/>
+
     </Grid>
 </Window>
