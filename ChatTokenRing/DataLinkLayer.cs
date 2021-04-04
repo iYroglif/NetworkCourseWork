@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ChatTokenRing
 {
@@ -244,10 +245,10 @@ namespace ChatTokenRing
         /// <summary>
         /// Установка логического соединения
         /// </summary>
-        public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster)
+        public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
         {
             // !!! Установка физического соединения
-            userNickname = "nick";// !!! Получение никнейма с пользовательского уровня
+            userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
             userAddress = 1;
             SendFrame(new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']')));
         }
@@ -290,6 +291,7 @@ namespace ChatTokenRing
                         if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress))
                         {
                             SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                            (Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
                             // !!! Передача сообщения на пользовательский уровень frame.data
                             if (frame.destination == 0x7F)
                             {
@@ -312,14 +314,14 @@ namespace ChatTokenRing
                             users.Add(Convert.ToByte(tmp[0]), tmp[1]);
                         }
 
-                        // !!! Передача списка пользователей на пользовательский уровень
+                        // !!! Передача списка пользователей на пользовательский уровень (users-словарь пользователей, значение ключей-имена пользователей(string))
                         if (userAddress == null)
                         {
                             userAddress = (byte?)(users.Last().Key + 1);
                         }
                         if (!users.ContainsKey((byte)userAddress))
                         {
-                            userNickname = "nick2";// !!! Получение никнейма с пользовательского уровня
+                            // ??? Может ли быть случай остутствия никнейма к этому моменту? userNickname = "nick2";// !!! Получение никнейма с пользовательского уровня
                             users.Add((byte)userAddress, userNickname);
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
