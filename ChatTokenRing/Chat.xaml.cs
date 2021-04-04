@@ -10,33 +10,33 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace ChatTokenRing
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Логика взаимодействия для Chat.xaml
     /// </summary>
-
-
-    public partial class MainWindow : Window
+    public partial class Chat : Window
     {
-        public Chat chatWindow;
-
-        public MainWindow()
+        public Chat()
         {
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        public void inMessage(string message)
         {
-
+            listBox.Items.Add(message);
         }
 
-        private void D_Checked(object sender, RoutedEventArgs e)
+        private void button_Click(object sender, RoutedEventArgs e)
         {
+            //258 datalink
+        }
 
+        private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //DataLinkLayer
         }
     }
 }

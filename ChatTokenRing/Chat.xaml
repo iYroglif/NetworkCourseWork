@@ -1,0 +1,15 @@
+﻿<Window x:Class="ChatTokenRing.Chat"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChatTokenRing"
+        mc:Ignorable="d"
+        Title="Chat" Height="450" Width="800">
+    <Grid>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="123,335,0,0" TextWrapping="Wrap" Text="отправляемое сообщение" VerticalAlignment="Top" Width="371"/>
+        <Button x:Name="button" Content="Отправка" HorizontalAlignment="Left" Margin="550,335,0,0" VerticalAlignment="Top" Width="117" Height="32" Click="button_Click"/>
+        <ListBox x:Name="listBox" HorizontalAlignment="Left" Height="236" Margin="123,39,0,0" VerticalAlignment="Top" Width="544" SelectionChanged="listBox_SelectionChanged"/>
+
+    </Grid>
+</Window>
