@@ -29,6 +29,17 @@ namespace ChatTokenRing
             InitializeComponent();
         }
 
+        private void Setup_Load(object sender, EventArgs e)
+        {
+            // Показываем список COM-портов.
+            string[] portNames = 
+            foreach (string portName in portNames)
+            {
+                comboBox.Items.Add(portName);
+                comboBox1.Items.Add(portName);
+            }
+        }
+
         private void button1_Click(object sender, RoutedEventArgs e)
         {
             ///DataLinkLayer.OpenConnection(textBoxUserName.Text);
