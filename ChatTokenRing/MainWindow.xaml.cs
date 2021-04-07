@@ -90,7 +90,38 @@ namespace ChatTokenRing
 
         private void comboBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
+            string[] portNames = Connection.GetPortsNames();
+            foreach (string portName in portNames)
+            {
+                comboBox.Items.Add(portName);
+            }
+        }
 
+        private void comboBox1_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            string[] portNames = Connection.GetPortsNames();
+            foreach (string portName in portNames)
+            {
+                comboBox1.Items.Add(portName);
+            }
+        }
+
+        private void comboBox_Initialized(object sender, EventArgs e)
+        {
+            string[] portNames = Connection.GetPortsNames();
+            foreach (string portName in portNames)
+            {
+                comboBox.Items.Add(portName);
+            }
+        }
+
+        private void comboBox1_Initialized(object sender, EventArgs e)
+        {
+            string[] portNames = Connection.GetPortsNames();
+            foreach (string portName in portNames)
+            {
+                comboBox1.Items.Add(portName);
+            }
         }
     }
 }
