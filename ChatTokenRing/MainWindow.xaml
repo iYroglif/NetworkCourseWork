@@ -14,8 +14,8 @@
         <Label x:Name="label_Copy1" Content="Имя пользователя" HorizontalAlignment="Left" Height="30" Margin="97,260,0,0" VerticalAlignment="Top" Width="160"/>
         <TextBox x:Name="textBoxUserName" HorizontalAlignment="Left" Height="30" Margin="287,260,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="260" TextChanged="textBox_TextChanged"/>
         <Button x:Name="button1" Content="Войти" HorizontalAlignment="Left" Margin="564,261,0,0" VerticalAlignment="Top" Width="99" Height="29" Click="button1_Click"/>
-        <ComboBox x:Name="comboBox" HorizontalAlignment="Left" Height="30" Margin="287,25,0,0" VerticalAlignment="Top" Width="376" SelectionChanged="comboBox_SelectionChanged" ContextMenuOpening="comboBox_ContextMenuOpening"/>
-        <ComboBox x:Name="comboBox1" HorizontalAlignment="Left" Height="30" Margin="290,94,0,0" VerticalAlignment="Top" Width="373" SelectionChanged="comboBox1_SelectionChanged_1"/>
+        <ComboBox x:Name="comboBox" HorizontalAlignment="Left" Height="30" Margin="287,25,0,0" VerticalAlignment="Top" Width="376" SelectionChanged="comboBox_SelectionChanged" ContextMenuOpening="comboBox_ContextMenuOpening" Initialized="comboBox_Initialized"/>
+        <ComboBox x:Name="comboBox1" HorizontalAlignment="Left" Height="30" Margin="290,94,0,0" VerticalAlignment="Top" Width="373" SelectionChanged="comboBox1_SelectionChanged_1" ContextMenuOpening="comboBox1_ContextMenuOpening" Initialized="comboBox1_Initialized"/>
 
     </Grid>
 </Window>
