@@ -247,6 +247,7 @@ namespace ChatTokenRing
         /// </summary>
         static public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
         {
+            Connection.OpenPorts(incomePortName, outcomePortName, isMaster);
             // !!! Установка физического соединения
             userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
             userAddress = 1;
@@ -261,6 +262,11 @@ namespace ChatTokenRing
             // ??? token ring
             lastFrame = frame;
             // !!! Отправка массива байтов на физический уровень (byte[])frame;
+        }
+
+        static public void SendMessage(string mes)
+        {
+            SendFrame(new Frame((byte)userAddress, Frame.Type.I, 0x7F, Encoding.UTF8.GetBytes(mes)));
         }
 
         /// <summary>
