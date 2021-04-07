@@ -58,6 +58,8 @@ namespace ChatTokenRing
                 string outcomePort = comboBox1.SelectedItem.ToString();
 
                 DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
+
+                chatWindow = new Chat();
             }
         }
 
