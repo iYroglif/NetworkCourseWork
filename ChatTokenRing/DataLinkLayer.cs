@@ -324,7 +324,7 @@ namespace ChatTokenRing
                             });
 
                             // !!! Передача сообщения на пользовательский уровень frame.data
-                            if (frame.destination == 0x7F)
+                            if ((frame.destination == 0x7F) && (frame.departure != userAddress))
                             {
                                 SendFrame(frame);
                             }
