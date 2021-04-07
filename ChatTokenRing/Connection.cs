@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WahChat
+namespace ChatTokenRing
 {
     class Connection
     {
@@ -17,6 +17,11 @@ namespace WahChat
         public bool isMaster;
 
         private byte boundByte = 0xFF;
+
+        public string[] GetPortsNames()
+        {
+            return SerialPort.GetPortNames();
+        }
 
         public Connection(string incomePortName, string outcomePortName, bool isMaster)
         {
@@ -139,7 +144,8 @@ namespace WahChat
             for (int i = 0; i < comBuffer.Length; i++) {
                 if (comBuffer[i] == boundByte) {
                     if (startByte) {
-                        DataLinkLayer.HandleFrame(listBuffer.toArray());
+                        byte[] outputArray = listBuffer.ToArray();
+                        DataLinkLayer.HandleFrame(outputArray);
                     }
                     else {
                         startByte = true;
