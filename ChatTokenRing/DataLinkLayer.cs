@@ -264,9 +264,9 @@ namespace ChatTokenRing
             // !!! Отправка массива байтов на физический уровень (byte[])frame;
         }
 
-        static public void SendMessage(string mes)
+        static public void SendMessage(byte? des, string mes)
         {
-            SendFrame(new Frame((byte)userAddress, Frame.Type.I, 0x7F, Encoding.UTF8.GetBytes(mes)));
+            SendFrame(new Frame((byte)userAddress, Frame.Type.I, des, Encoding.UTF8.GetBytes(mes)));
         }
 
         /// <summary>
