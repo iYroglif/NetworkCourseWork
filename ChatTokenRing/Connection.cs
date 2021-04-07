@@ -18,7 +18,7 @@ namespace ChatTokenRing
 
         private byte boundByte = 0xFF;
 
-        public string[] GetPortsNames()
+        public static string[] GetPortsNames()
         {
             return SerialPort.GetPortNames();
         }
