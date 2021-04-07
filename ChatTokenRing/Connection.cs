@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChatTokenRing
 {
-    class Connection
+    abstract class Connection
     {
         private SerialPort incomePort;
         private SerialPort outcomePort;
@@ -23,17 +23,10 @@ namespace ChatTokenRing
             return SerialPort.GetPortNames();
         }
 
-        public Connection(string incomePortName, string outcomePortName, bool isMaster)
-        {
-            this.isPortsOpened = OpenPorts(incomePortName, outcomePortName, isMaster);
-
-            // ..
-        }
-
         /// <summary>
         /// Открытие портов
         /// </summary>
-        private bool OpenPorts(string incomePortName, string outcomePortName, bool isMaster)
+        public bool OpenPorts(string incomePortName, string outcomePortName, bool isMaster)
         {
             // Создаем объекты портов.
             this.incomePort = new SerialPort(incomePortName);
@@ -62,7 +55,7 @@ namespace ChatTokenRing
         /// <summary>
         /// Закрытие портов
         /// </summary>
-        private bool ClosePorts()
+        public bool ClosePorts()
         {
             // Закрываем порты.
             this.incomePort.Close();
