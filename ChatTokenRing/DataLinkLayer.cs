@@ -262,6 +262,7 @@ namespace ChatTokenRing
             // ??? token ring
             lastFrame = frame;
             // !!! Отправка массива байтов на физический уровень (byte[])frame;
+            Connection.SendBytes((byte[])frame);
         }
 
         static public void SendMessage(byte? des, string mes)
