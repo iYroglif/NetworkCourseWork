@@ -10,13 +10,12 @@ namespace ChatTokenRing
 {
     abstract class Connection
     {
-        private SerialPort incomePort;
-        private SerialPort outcomePort;
+        static SerialPort incomePort;
+        static SerialPort outcomePort;
 
-        public bool isPortsOpened = false;
-        public bool isMaster;
+        static bool isMaster;
 
-        private byte boundByte = 0xFF;
+        static byte boundByte = 0xFF;
 
         public static string[] GetPortsNames()
         {
@@ -26,48 +25,48 @@ namespace ChatTokenRing
         /// <summary>
         /// Открытие портов
         /// </summary>
-        public bool OpenPorts(string incomePortName, string outcomePortName, bool isMaster)
+        public static bool OpenPorts(string incomePortName, string outcomePortName, bool _isMaster)
         {
             // Создаем объекты портов.
-            this.incomePort = new SerialPort(incomePortName);
-            this.outcomePort = new SerialPort(outcomePortName);
+            incomePort = new SerialPort(incomePortName);
+            outcomePort = new SerialPort(outcomePortName);
 
-            this.isMaster = isMaster;
+            isMaster = _isMaster;
 
             // Настраиваем порты.
-            this.incomePort.Parity = Parity.Even;
-            this.incomePort.Handshake = Handshake.RequestToSend;
-            this.incomePort.BaudRate = 9600;
+            incomePort.Parity = Parity.Even;
+            incomePort.Handshake = Handshake.RequestToSend;
+            incomePort.BaudRate = 9600;
             //this.incomePort.ReadBufferSize = 4 * 1024; // TODO: Надо пересчитать размер буфера.
-            this.incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
+            incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
 
-            this.outcomePort.Parity = Parity.Even;
-            this.outcomePort.Handshake = Handshake.RequestToSend;
-            this.outcomePort.BaudRate = 9600;
+            outcomePort.Parity = Parity.Even;
+            outcomePort.Handshake = Handshake.RequestToSend;
+            outcomePort.BaudRate = 9600;
 
             // Открываем порты.
-            this.incomePort.Open();
-            this.outcomePort.Open();
+            incomePort.Open();
+            outcomePort.Open();
 
-            return (this.incomePort.IsOpen && this.outcomePort.IsOpen);
+            return (incomePort.IsOpen && outcomePort.IsOpen);
         }
 
         /// <summary>
         /// Закрытие портов
         /// </summary>
-        public bool ClosePorts()
+        public static bool ClosePorts()
         {
             // Закрываем порты.
-            this.incomePort.Close();
-            this.outcomePort.Close();
+            incomePort.Close();
+            outcomePort.Close();
 
-            return (this.incomePort.IsOpen && this.outcomePort.IsOpen);
+            return (incomePort.IsOpen && outcomePort.IsOpen);
         }
 
         /// <summary>
         /// Пересылка байтов
         /// </summary>
-        public void SendBytes(byte[] inputVect)
+        public static void SendBytes(byte[] inputVect)
         {
             
             List<byte> hamm = inputVect.ToList();
@@ -91,7 +90,7 @@ namespace ChatTokenRing
             safeList.Insert(0, boundByte);
             safeList.Add(boundByte);
 
-            if (this.outcomePort.WriteBufferSize - this.outcomePort.BytesToWrite < safeList.Count)
+            if (outcomePort.WriteBufferSize - outcomePort.BytesToWrite < safeList.Count)
             {
                 // Если сообщение не влезло в порт, то надо что-то с этим делать.
                 // То ли очередь придумать, то ли ещё что.
@@ -99,13 +98,13 @@ namespace ChatTokenRing
             }
 
             byte[] outputVect = safeList.ToArray();
-            this.outcomePort.Write(outputVect, 0, outputVect.Length);
+            outcomePort.Write(outputVect, 0, outputVect.Length);
         }
 
         /// <summary>
         /// Получение байтов
         /// </summary>
-        public void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
+        public static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
             int bytes = incomePort.BytesToRead;
 
