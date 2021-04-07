@@ -238,14 +238,14 @@ namespace ChatTokenRing
 
     abstract class DataLinkLayer
     {
-        byte? userAddress = null;
-        string userNickname;
-        Frame lastFrame;
+        static byte? userAddress = null;
+        static string userNickname;
+        static Frame lastFrame;
 
         /// <summary>
         /// Установка логического соединения
         /// </summary>
-        public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
+        static public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
         {
             // !!! Установка физического соединения
             userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
@@ -256,7 +256,7 @@ namespace ChatTokenRing
         /// <summary>
         /// Отправка кадра
         /// </summary>
-        public void SendFrame(Frame frame)
+        static public void SendFrame(Frame frame)
         {
             // ??? token ring
             lastFrame = frame;
@@ -266,7 +266,7 @@ namespace ChatTokenRing
         /// <summary>
         /// Разъединение логического соединения
         /// </summary>
-        public void CloseConnection()
+        static public void CloseConnection()
         {
             SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink));
             // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
@@ -275,7 +275,7 @@ namespace ChatTokenRing
         /// <summary>
         /// Обработка пришедшего кадра
         /// </summary>
-        public void HandleFrame(byte[] bytes)
+        static public void HandleFrame(byte[] bytes)
         {
             Frame frame = new Frame();
             if (!frame.TryConvertFromBytes(bytes))
