@@ -31,8 +31,7 @@ namespace ChatTokenRing
 
         private void Setup_Load(object sender, EventArgs e)
         {
-            // Показываем список COM-портов.
-            string[] portNames = 
+            string[] portNames = Connection.GetPortsNames();
             foreach (string portName in portNames)
             {
                 comboBox.Items.Add(portName);
@@ -53,7 +52,13 @@ namespace ChatTokenRing
 
         private void buttonConnection_Click(object sender, RoutedEventArgs e)
         {
-            //if((outcomePort.Selected))
+            if ((comboBox.SelectedItem != null)&&(comboBox1.SelectedItem != null))
+            {
+                string incomePort = comboBox.SelectedItem.ToString();
+                string outcomePort = comboBox1.SelectedItem.ToString();
+
+                DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
+            }
         }
 
         private void comboBox1_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -73,20 +78,12 @@ namespace ChatTokenRing
 
         private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //string[] portNames = NetworkService.GetSharedService().GetPortsNames();
-            //foreach (string portName in portNames)
-            //{
-            //    outcomePortBox.Items.Add(portName);
-            //}
+   
         }
 
         private void comboBox1_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
-            //string[] portNames = NetworkService.GetSharedService().GetPortsNames();
-            //foreach (string portName in portNames)
-            //{
-            //    incomePortBox.Items.Add(portName);
-            //}
+
         }
 
         private void comboBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
