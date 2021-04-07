@@ -32,6 +32,8 @@ namespace ChatTokenRing
         private void button_Click(object sender, RoutedEventArgs e)
         {
             //258 datalink
+            string massege = textBox.Text;
+            DataLinkLayer.SendMessage(0x7F, massege);
         }
 
         private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
