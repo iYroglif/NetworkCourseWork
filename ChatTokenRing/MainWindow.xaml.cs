@@ -31,10 +31,54 @@ namespace ChatTokenRing
 
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-
+            ///DataLinkLayer.OpenConnection(textBoxUserName.Text);
+            chatWindow = new Chat();
         }
 
         private void D_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void buttonConnection_Click(object sender, RoutedEventArgs e)
+        {
+            //if((outcomePort.Selected))
+        }
+
+        private void comboBox1_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void textBox1_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void textBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+           
+        }
+
+        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //string[] portNames = NetworkService.GetSharedService().GetPortsNames();
+            //foreach (string portName in portNames)
+            //{
+            //    outcomePortBox.Items.Add(portName);
+            //}
+        }
+
+        private void comboBox1_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        {
+            //string[] portNames = NetworkService.GetSharedService().GetPortsNames();
+            //foreach (string portName in portNames)
+            //{
+            //    incomePortBox.Items.Add(portName);
+            //}
+        }
+
+        private void comboBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
 
         }
