@@ -45,8 +45,12 @@ namespace ChatTokenRing
             outcomePort.BaudRate = 9600;
 
             // Открываем порты.
-            incomePort.Open();
-            outcomePort.Open();
+            if (!incomePort.IsOpen) {
+                incomePort.Open();
+            }
+            if (!outcomePort.IsOpen) {
+                outcomePort.Open();
+            }
 
             return (incomePort.IsOpen && outcomePort.IsOpen);
         }
@@ -90,12 +94,12 @@ namespace ChatTokenRing
             safeList.Insert(0, boundByte);
             safeList.Add(boundByte);
 
-            if (outcomePort.WriteBufferSize - outcomePort.BytesToWrite < safeList.Count)
+            /*if (outcomePort.WriteBufferSize - outcomePort.BytesToWrite < safeList.Count)
             {
                 // Если сообщение не влезло в порт, то надо что-то с этим делать.
                 // То ли очередь придумать, то ли ещё что.
                 return;
-            }
+            }*/
 
             byte[] outputVect = safeList.ToArray();
             outcomePort.Write(outputVect, 0, outputVect.Length);
@@ -116,40 +120,31 @@ namespace ChatTokenRing
             // Записываем в массив данные от ком порта.
             incomePort.Read(comBuffer, 0, bytes);
 
-            /*foreach (byte incomeByte in comBuffer)
-            {
-                if (incomeByte == boundByte)
-                {
-                    if (this.bytesBuffer.Count > 0)
-                    {
-                        NetworkService.GetSharedService().HandleMessage(this.bytesBuffer);
-                    }
-
-                    this.bytesBuffer = new List<byte>();
-                }
-                else
-                {
-                    this.bytesBuffer.Add(incomeByte);
-                }
-            }*/
 
             for (int i = 0; i < comBuffer.Length; i++) {
-                if (comBuffer[i] == boundByte) {
-                    if (startByte) {
+                if (comBuffer[i] == boundByte)
+                {
+                    if (startByte)
+                    {
                         byte[] outputArray = listBuffer.ToArray();
                         DataLinkLayer.HandleFrame(outputArray);
                     }
-                    else {
+                    else
+                    {
                         startByte = true;
                     }
                 }
-
-                if (startByte) {
-                    if (comBuffer[i] == 0x7F) {
-                        listBuffer.Add((byte)(comBuffer[i] | comBuffer[++i]));
-                    }
-                    else {
-                        listBuffer.Add(comBuffer[i]);
+                else {
+                    if (startByte)
+                    {
+                        if (comBuffer[i] == 0x7F)
+                        {
+                            listBuffer.Add((byte)(comBuffer[i] | comBuffer[++i]));
+                        }
+                        else
+                        {
+                            listBuffer.Add(comBuffer[i]);
+                        }
                     }
                 }
             }

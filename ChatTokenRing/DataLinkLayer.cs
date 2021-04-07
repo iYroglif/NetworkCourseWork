@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace ChatTokenRing
 {
@@ -241,6 +244,7 @@ namespace ChatTokenRing
         static byte? userAddress = null;
         static string userNickname;
         static Frame lastFrame;
+        static System.Windows.Controls.ListBox listBox;
 
         /// <summary>
         /// Установка логического соединения
@@ -279,6 +283,11 @@ namespace ChatTokenRing
             // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
         }
 
+        static public void SetChat(System.Windows.Controls.ListBox lb)
+        {
+            listBox = lb;
+        }
+
         /// <summary>
         /// Обработка пришедшего кадра
         /// </summary>
@@ -298,7 +307,22 @@ namespace ChatTokenRing
                         if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress))
                         {
                             SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
-                            (Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
+
+                            //await Task.Run(() => (Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)));
+
+                            /*Dispatcher.Invoke(async () => {
+
+                                listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
+
+                                //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
+                            });*/
+
+                            listBox.Dispatcher.Invoke((MethodInvoker)delegate {
+
+                                // Running on the UI thread
+                                listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
+                            });
+
                             // !!! Передача сообщения на пользовательский уровень frame.data
                             if (frame.destination == 0x7F)
                             {

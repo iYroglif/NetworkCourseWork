@@ -22,6 +22,7 @@ namespace ChatTokenRing
         public Chat()
         {
             InitializeComponent();
+            DataLinkLayer.SetChat(listBox);
         }
 
         public void inMessage(string message)
