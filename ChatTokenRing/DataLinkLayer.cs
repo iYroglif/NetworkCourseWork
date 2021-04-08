@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using System.Threading;
 
 namespace ChatTokenRing
 {
@@ -78,23 +79,22 @@ namespace ChatTokenRing
                         else
                         {
                             destination = (byte)des;
-
-                            if (bytes == null)
-                            {
-                                // Ошибка: нет данных
-                            }
-                            else
-                            {
-                                if (bytes.Length > 255)
-                                {
-                                    // Ошибка: данные не помещаются в кадр
-                                }
-                                else
-                                {
-                                    data_length = (byte)bytes.Length;
-                                    data = bytes;
-                                }
-                            }
+                        }
+                    }
+                    if (bytes == null)
+                    {
+                        // Ошибка: нет данных
+                    }
+                    else
+                    {
+                        if (bytes.Length > 255)
+                        {
+                            // Ошибка: данные не помещаются в кадр
+                        }
+                        else
+                        {
+                            data_length = (byte)bytes.Length;
+                            data = bytes;
                         }
                     }
                     break;
@@ -113,12 +113,11 @@ namespace ChatTokenRing
                         else
                         {
                             destination = (byte)des;
-
-                            if (bytes != null)
-                            {
-                                // Ошибка: есть какие-то данные
-                            }
                         }
+                    }
+                    if (bytes != null)
+                    {
+                        // Ошибка: есть какие-то данные
                     }
                     break;
 
@@ -320,7 +319,8 @@ namespace ChatTokenRing
                                 //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
                             });*/
 
-                            listBox.Dispatcher.Invoke((MethodInvoker)delegate {
+                            listBox.Dispatcher.Invoke((MethodInvoker)delegate
+                            {
 
                                 // Running on the UI thread
                                 listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
@@ -360,6 +360,7 @@ namespace ChatTokenRing
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
                         }
+                        Thread.Sleep(1000); // если будет норм работать без этого то нужно убрать
                         SendFrame(frame);
                         break;
 
