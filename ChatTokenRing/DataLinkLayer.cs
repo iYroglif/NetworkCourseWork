@@ -254,8 +254,11 @@ namespace ChatTokenRing
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster);
             // !!! Установка физического соединения
             userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
-            userAddress = 1;
-            SendFrame(new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']')));
+            if (isMaster)
+            {
+                userAddress = 1;
+                SendFrame(new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']')));
+            }
         }
 
         /// <summary>
