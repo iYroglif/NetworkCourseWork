@@ -27,6 +27,7 @@ namespace ChatTokenRing
         public MainWindow()
         {
             InitializeComponent();
+
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)
@@ -42,31 +43,37 @@ namespace ChatTokenRing
 
         private void buttonConnection_Click(object sender, RoutedEventArgs e)
         {
-            if ((comboBox.SelectedItem != null)&&(comboBox1.SelectedItem != null))
+            if ((comboBox.SelectedItem != null) && (comboBox1.SelectedItem != null) && (textBoxUserName.Text != ""))
             {
-                string incomePort = comboBox.SelectedItem.ToString();
-                string outcomePort = comboBox1.SelectedItem.ToString();
+                if (comboBox.SelectedItem.ToString() == comboBox1.SelectedItem.ToString())
+                {
+                    MessageBox.Show("Выберите различные COM-порты и повторите попытку", "Ошибка соединения", MessageBoxButton.OK);
+                    return;
+                }
+                else
+                {
+                    string incomePort = comboBox.SelectedItem.ToString();
+                    string outcomePort = comboBox1.SelectedItem.ToString();
 
-                DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
+                    DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
 
-                chatWindow = new Chat();
-                chatWindow.Show();
+                    chatWindow = new Chat();
+                    chatWindow.Show();
+                }
             }
-        }
-
-        private void comboBox1_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void textBox1_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
-
-        private void textBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-           
+            else
+            {
+                if ((comboBox.SelectedItem == null) || (comboBox1.SelectedItem == null))
+                {
+                    MessageBox.Show("Выберите COM-порты и повторите попытку", "Ошибка соединения", MessageBoxButton.OK);
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show("Введите имя пользователя и повторите попытку", "Ошибка соединения", MessageBoxButton.OK);
+                    return;
+                }
+            }
         }
 
         private void comboBox_Initialized(object sender, EventArgs e)
@@ -85,6 +92,26 @@ namespace ChatTokenRing
             {
                 comboBox1.Items.Add(portName);
             }
+        }
+
+        private void textBoxUserName_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(textBoxUserName.Text))
+            {
+                textBoxUserName.Visibility = Visibility.Collapsed;
+                watermarkedText.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void watermarkedText_GotFocus(object sender, RoutedEventArgs e)
+        {
+            watermarkedText.Visibility = Visibility.Collapsed;
+            textBoxUserName.Visibility = Visibility.Visible;
+        }
+
+        private void textBoxUserName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }
