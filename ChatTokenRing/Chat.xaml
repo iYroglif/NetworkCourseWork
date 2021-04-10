@@ -5,8 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatTokenRing"
         mc:Ignorable="d"
-        Title="Chat" Height="450" Width="800">
+        Title="Chat" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
         <TextBox x:Name="textBox" LostFocus="textBox_LostFocus" HorizontalAlignment="Left" Height="32" Margin="123,335,0,0" VerticalAlignment="Top" Width="371" KeyDown="textBox_KeyDown"/>
         <TextBox x:Name="watermarkedText" GotFocus="watermarkedText_GotFocus" HorizontalAlignment="Left" Height="32" Margin="123,335,0,0" Text="Введите сообщение" VerticalAlignment="Top" Width="371"/>
         <Button x:Name="button" Content="Отправка" HorizontalAlignment="Left" Margin="550,335,0,0" VerticalAlignment="Top" Width="117" Height="32" Click="button_Click"/>
