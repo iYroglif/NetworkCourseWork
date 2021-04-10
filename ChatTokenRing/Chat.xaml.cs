@@ -41,5 +41,29 @@ namespace ChatTokenRing
         {
             //DataLinkLayer
         }
+
+        private void watermarkedText_GotFocus(object sender, RoutedEventArgs e)
+        {
+            watermarkedText.Visibility = Visibility.Collapsed;
+            textBox.Visibility = Visibility.Visible;
+        }
+
+        private void textBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(textBox.Text))
+            {
+                textBox.Visibility = Visibility.Collapsed;
+                watermarkedText.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void textBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key==Key.Enter)
+            {
+                string massege = textBox.Text;
+                DataLinkLayer.SendMessage(0x7F, massege);
+            }
+        }
     }
 }

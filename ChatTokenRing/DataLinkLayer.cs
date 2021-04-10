@@ -360,7 +360,7 @@ namespace ChatTokenRing
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
                         }
-                        Thread.Sleep(1000); // если будет норм работать без этого то нужно убрать
+                        Thread.Sleep(100); // если будет норм работать без этого то нужно убрать
                         SendFrame(frame);
                         break;
 
