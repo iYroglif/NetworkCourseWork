@@ -32,9 +32,9 @@ namespace ChatTokenRing
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            //258 datalink
             string massege = textBox.Text;
-            DataLinkLayer.SendMessage(0x7F, massege);
+            DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm") +": "+massege);
+            textBox.Clear();
         }
 
         private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -62,7 +62,22 @@ namespace ChatTokenRing
             if(e.Key==Key.Enter)
             {
                 string massege = textBox.Text;
-                DataLinkLayer.SendMessage(0x7F, massege);
+                DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm") + ": " + massege);
+                textBox.Clear();
+            }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if(MessageBox.Show("Вы уверены, что хотите закрыть окно?", "Подтверждение закрытия", MessageBoxButton.YesNo) == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+            }
+            else
+            {
+                e.Cancel = false;
+                DataLinkLayer.CloseConnection();
+                Application.Current.MainWindow.Show();
             }
         }
     }

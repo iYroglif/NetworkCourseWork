@@ -58,6 +58,7 @@ namespace ChatTokenRing
                     DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
 
                     chatWindow = new Chat();
+                    Application.Current.MainWindow.Hide();
                     chatWindow.Show();
                 }
             }
