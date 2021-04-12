@@ -283,6 +283,7 @@ namespace ChatTokenRing
         {
             SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink));
             // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+            Connection.ClosePorts();
         }
 
         static public void SetChat(System.Windows.Controls.ListBox lb)
@@ -318,10 +319,8 @@ namespace ChatTokenRing
 
                                 //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
                             });*/
-
-                            listBox.Dispatcher.Invoke((MethodInvoker)delegate
+                                listBox.Dispatcher.Invoke((MethodInvoker)delegate
                             {
-
                                 // Running on the UI thread
                                 listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
                             });
@@ -360,13 +359,14 @@ namespace ChatTokenRing
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
                         }
-                        Thread.Sleep(100); // если будет норм работать без этого то нужно убрать
+                        Thread.Sleep(50); // если будет норм работать без этого то нужно убрать
                         SendFrame(frame);
                         break;
 
                     case Frame.Type.Uplink:
                         SendFrame(frame);
                         // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+                        Connection.ClosePorts();
                         break;
 
                     case Frame.Type.ACK:

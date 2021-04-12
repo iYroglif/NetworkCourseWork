@@ -4,12 +4,15 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatTokenRing
 {
     abstract class Connection
     {
+        static object locker = new object();
+
         static SerialPort incomePort;
         static SerialPort outcomePort;
 
@@ -43,10 +46,12 @@ namespace ChatTokenRing
             outcomePort.BaudRate = 9600;
 
             // Открываем порты.
-            if (!incomePort.IsOpen) {
+            if (!incomePort.IsOpen)
+            {
                 incomePort.Open();
             }
-            if (!outcomePort.IsOpen) {
+            if (!outcomePort.IsOpen)
+            {
                 outcomePort.Open();
             }
 
@@ -70,7 +75,11 @@ namespace ChatTokenRing
         /// </summary>
         public static void SendBytes(byte[] outputVect)
         {
-            outcomePort.Write(outputVect, 0, outputVect.Length);
+            lock (locker)
+            {
+                outcomePort.Write(outputVect, 0, outputVect.Length);
+                Thread.Sleep(100);
+            }
         }
 
         /// <summary>
@@ -78,12 +87,16 @@ namespace ChatTokenRing
         /// </summary>
         public static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
-            int bytes = incomePort.BytesToRead;
-            byte[] inputVect = new byte[bytes];
+            lock (locker)
+            {
+                Thread.Sleep(10);
+                int bytes = incomePort.BytesToRead;
+                byte[] inputVect = new byte[bytes];
 
-            // Записываем в массив данные от ком порта.
-            incomePort.Read(inputVect, 0, bytes);
-            DataLinkLayer.HandleFrame(inputVect);
+                // Записываем в массив данные от ком порта.
+                incomePort.Read(inputVect, 0, bytes);
+                DataLinkLayer.HandleFrame(inputVect);
+            }
         }
     }
 }
