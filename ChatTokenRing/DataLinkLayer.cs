@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Threading;
+using System.Diagnostics;
 
 namespace ChatTokenRing
 {
@@ -40,7 +41,7 @@ namespace ChatTokenRing
                 case Type.I:
                     if (des == null)
                     {
-                        // Ошибка: нет адреса получателя
+                        Debug.Assert(false, "Ошибка: нет адреса получателя");
                     }
                     else
                     {
@@ -48,13 +49,13 @@ namespace ChatTokenRing
 
                         if (bytes == null)
                         {
-                            // Ошибка: нет данных
+                            Debug.Assert(false, "Ошибка: нет данных");
                         }
                         else
                         {
                             if (bytes.Length > 255)
                             {
-                                // Ошибка: данные не помещаются в кадр
+                                Debug.Assert(false, "Ошибка: данные не помещаются в кадр");
                             }
                             else
                             {
@@ -74,7 +75,7 @@ namespace ChatTokenRing
                     {
                         if (des != 0x7F)
                         {
-                            // Ошибка: адрес не широковещательный
+                            Debug.Assert(false, "Ошибка: адрес не широковещательный");
                         }
                         else
                         {
@@ -83,13 +84,13 @@ namespace ChatTokenRing
                     }
                     if (bytes == null)
                     {
-                        // Ошибка: нет данных
+                        Debug.Assert(false, "Ошибка: нет данных");
                     }
                     else
                     {
                         if (bytes.Length > 255)
                         {
-                            // Ошибка: данные не помещаются в кадр
+                            Debug.Assert(false, "Ошибка: данные не помещаются в кадр");
                         }
                         else
                         {
@@ -108,7 +109,7 @@ namespace ChatTokenRing
                     {
                         if (des != 0x7F)
                         {
-                            // Ошибка: адрес не широковещательный
+                            Debug.Assert(false, "Ошибка: адрес не широковещательный");
                         }
                         else
                         {
@@ -117,14 +118,14 @@ namespace ChatTokenRing
                     }
                     if (bytes != null)
                     {
-                        // Ошибка: есть какие-то данные
+                        Debug.Assert(false, "Ошибка: есть какие-то данные");
                     }
                     break;
 
                 case Type.ACK:
                     if (des == null)
                     {
-                        // Ошибка: нет адреса получателя
+                        Debug.Assert(false, "Ошибка: нет адреса получателя");
                     }
                     else
                     {
@@ -132,7 +133,7 @@ namespace ChatTokenRing
 
                         if (bytes != null)
                         {
-                            // Ошибка: есть какие-то данные
+                            Debug.Assert(false, "Ошибка: есть какие-то данные");
                         }
                     }
                     break;
@@ -140,7 +141,7 @@ namespace ChatTokenRing
                 case Type.Ret:
                     if (des == null)
                     {
-                        // Ошибка: нет адреса получателя
+                        Debug.Assert(false, "Ошибка: нет адреса получателя");
                     }
                     else
                     {
@@ -148,13 +149,13 @@ namespace ChatTokenRing
 
                         if (bytes != null)
                         {
-                            // Ошибка: есть какие-то данные
+                            Debug.Assert(false, "Ошибка: есть какие-то данные");
                         }
                     }
                     break;
 
                 default:
-                    // Ошибка: неверный тип кадра
+                    Debug.Assert(false, "Ошибка: неверный тип кадра");
                     break;
             }
         }
@@ -299,6 +300,7 @@ namespace ChatTokenRing
             Frame frame = new Frame();
             if (!frame.TryConvertFromBytes(bytes))
             {
+                Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
                 SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? по идее соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure));
                 // Ошибка: нужен запрос на повторную отправку и повторная отправка
             }
@@ -319,11 +321,9 @@ namespace ChatTokenRing
 
                                 //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
                             });*/
-                                listBox.Dispatcher.Invoke((MethodInvoker)delegate
-                            {
-                                // Running on the UI thread
-                                listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
-                            });
+
+                            Thread.Sleep(200); // !!! работающий костыль (макс, нужно поправить)
+                            listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
 
                             // !!! Передача сообщения на пользовательский уровень frame.data
                             if ((frame.destination == 0x7F) && (frame.departure != userAddress))
