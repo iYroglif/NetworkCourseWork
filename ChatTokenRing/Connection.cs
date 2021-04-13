@@ -11,7 +11,8 @@ namespace ChatTokenRing
 {
     abstract class Connection
     {
-        static object locker = new object();
+        static object slocker = new object();
+        static object glocker = new object();
 
         static SerialPort incomePort;
         static SerialPort outcomePort;
@@ -75,7 +76,7 @@ namespace ChatTokenRing
         /// </summary>
         public static void SendBytes(byte[] outputVect)
         {
-            lock (locker)
+            lock (slocker)
             {
                 outcomePort.Write(outputVect, 0, outputVect.Length);
                 Thread.Sleep(100);
@@ -87,16 +88,17 @@ namespace ChatTokenRing
         /// </summary>
         public static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
-            lock (locker)
+            byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
+            lock (glocker)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(50);
                 int bytes = incomePort.BytesToRead;
-                byte[] inputVect = new byte[bytes];
+                inputVect = new byte[bytes];
 
                 // Записываем в массив данные от ком порта.
                 incomePort.Read(inputVect, 0, bytes);
-                DataLinkLayer.HandleFrame(inputVect);
             }
+            DataLinkLayer.HandleFrame(inputVect);
         }
     }
 }
