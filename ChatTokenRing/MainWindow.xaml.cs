@@ -97,22 +97,18 @@ namespace ChatTokenRing
 
         private void textBoxUserName_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(textBoxUserName.Text))
+            if (textBoxUserName.Text == "")
             {
-                textBoxUserName.Visibility = Visibility.Collapsed;
-                watermarkedText.Visibility = Visibility.Visible;
+                textBoxUserName.Text = "Введите имя пользователя";
             }
         }
 
-        private void watermarkedText_GotFocus(object sender, RoutedEventArgs e)
+        private void textBoxUserName_GotFocus(object sender, RoutedEventArgs e)
         {
-            watermarkedText.Visibility = Visibility.Collapsed;
-            textBoxUserName.Visibility = Visibility.Visible;
-        }
-
-        private void textBoxUserName_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
+            if (textBoxUserName.Text == "Введите имя пользователя")
+            {
+                textBoxUserName.Text = "";
+            }
         }
     }
 }

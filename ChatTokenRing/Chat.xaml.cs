@@ -42,18 +42,11 @@ namespace ChatTokenRing
             //DataLinkLayer
         }
 
-        private void watermarkedText_GotFocus(object sender, RoutedEventArgs e)
-        {
-            watermarkedText.Visibility = Visibility.Collapsed;
-            textBox.Visibility = Visibility.Visible;
-        }
-
         private void textBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(textBox.Text))
+            if (textBox.Text == "")
             {
-                textBox.Visibility = Visibility.Collapsed;
-                watermarkedText.Visibility = Visibility.Visible;
+                textBox.Text = "Введите сообщение";
             }
         }
 
@@ -78,6 +71,14 @@ namespace ChatTokenRing
                 e.Cancel = false;
                 DataLinkLayer.CloseConnection();
                 Application.Current.MainWindow.Show();
+            }
+        }
+
+        private void textBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (textBox.Text == "Введите сообщение")
+            {
+                textBox.Text = "";
             }
         }
     }

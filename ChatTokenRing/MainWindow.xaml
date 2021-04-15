@@ -12,8 +12,7 @@
         <Label x:Name="label" Content="Исходящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="114,92,0,0" VerticalAlignment="Top" Width="160"/>
         <Label x:Name="label_Copy" Content="Входящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="114,153,0,0" VerticalAlignment="Top" Width="160"/>
         <Label x:Name="label_Copy1" Content="Имя пользователя" HorizontalAlignment="Left" Height="30" Margin="114,217,0,0" VerticalAlignment="Top" Width="160"/>
-        <TextBox x:Name="textBoxUserName" LostFocus="textBoxUserName_LostFocus" HorizontalAlignment="Left" Height="30" Margin="304,217,0,0" VerticalAlignment="Top" Width="376" TextChanged="textBoxUserName_TextChanged"/>
-        <TextBox x:Name="watermarkedText" GotFocus="watermarkedText_GotFocus" Text="Введите имя пользователя" HorizontalAlignment="Left" Height="30" Margin="304,217,0,0" VerticalAlignment="Top" Width="376"/>
+        <TextBox x:Name="textBoxUserName" Text="Введите имя пользователя" LostFocus="textBoxUserName_LostFocus"  HorizontalAlignment="Left" Height="30" Margin="304,217,0,0" VerticalAlignment="Top" Width="376" GotFocus="textBoxUserName_GotFocus"/>
         <ComboBox x:Name="comboBox" HorizontalAlignment="Left" Height="30" Margin="304,92,0,0" VerticalAlignment="Top" Width="376" Initialized="comboBox_Initialized"/>
         <ComboBox x:Name="comboBox1" HorizontalAlignment="Left" Height="30" Margin="304,153,0,0" VerticalAlignment="Top" Width="376" Initialized="comboBox1_Initialized"/>
 
