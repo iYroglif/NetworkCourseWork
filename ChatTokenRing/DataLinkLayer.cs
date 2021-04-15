@@ -244,7 +244,6 @@ namespace ChatTokenRing
         static byte? userAddress = null;
         static string userNickname;
         static Frame lastFrame;
-        static System.Windows.Controls.ListBox listBox;
 
         /// <summary>
         /// Установка логического соединения
@@ -287,11 +286,6 @@ namespace ChatTokenRing
             Connection.ClosePorts();
         }
 
-        static public void SetChat(System.Windows.Controls.ListBox lb)
-        {
-            listBox = lb;
-        }
-
         /// <summary>
         /// Обработка пришедшего кадра
         /// </summary>
@@ -322,8 +316,18 @@ namespace ChatTokenRing
                                 //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
                             });*/
 
-                            Thread.Sleep(200); // !!! работающий костыль (макс, нужно поправить)
-                            listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
+                            //Thread.Sleep(200); // !!! работающий костыль (макс, нужно поправить)
+                            //listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
+                            //System.Windows.Forms.Control.Invoke((MethodInvoker)delegate { (System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
+
+
+                            //(System.Windows.Application.Current.MainWindow as MainWindow).Dispatcher.Invoke(() => { (System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
+                            //Dispatcher.Invoke((MethodInvoker)delegate { chwindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
+                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
+                            //mv.chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
+                            //object v = System.Windows.Forms.Control.Invoke( (MethodInvoker)delegate { });
+                            //(System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
+                            //Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
 
                             // !!! Передача сообщения на пользовательский уровень frame.data
                             if ((frame.destination == 0x7F) && (frame.departure != userAddress))
@@ -346,12 +350,13 @@ namespace ChatTokenRing
                             string[] tmp = item.Trim('[', ']').Split(',');
                             users.Add(Convert.ToByte(tmp[0]), tmp[1]);
                         }
-
+                        Chat.List(users);
                         // !!! Передача списка пользователей на пользовательский уровень (users-словарь пользователей, значение ключей-имена пользователей(string))
                         if (userAddress == null)
                         {
                             userAddress = (byte?)(users.Last().Key + 1);
                         }
+
                         if (!users.ContainsKey((byte)userAddress))
                         {
                             // ??? Может ли быть случай остутствия никнейма к этому моменту? userNickname = "nick2";// !!! Получение никнейма с пользовательского уровня
@@ -366,7 +371,9 @@ namespace ChatTokenRing
                     case Frame.Type.Uplink:
                         SendFrame(frame);
                         // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+                        //Chat.exit();
                         Connection.ClosePorts();
+                        Chat.exit();
                         break;
 
                     case Frame.Type.ACK:

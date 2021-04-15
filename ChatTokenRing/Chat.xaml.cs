@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,26 +20,36 @@ namespace ChatTokenRing
     /// </summary>
     public partial class Chat : Window
     {
+        static System.Windows.Controls.ListBox lb;
+        static Chat ths;
+        static bool checkExit=false;
+
         public Chat()
         {
             InitializeComponent();
-            DataLinkLayer.SetChat(listBox);
+            lb = listBox;
+            ths = this;
         }
 
-        public void inMessage(string message)
+        public static void List(Dictionary<byte, string> userLists)
         {
-            if(message=="Соединение разорвано")
-            {
-                MessageBox.Show("Соединение разорвано");
-                Application.Current.MainWindow.Show();
-            }
-            listBox.Items.Add(message);
+            Console.WriteLine(userLists);
+            //listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
+
         }
+
+        public static void inMessage(string message, byte userAdress)
+        {
+            Thread.Sleep(200);
+            lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + ": " + message); });
+        }
+
+
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
             string massege = textBox.Text;
-            DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm:ss") +": "+massege);
+            DataLinkLayer.SendMessage(0x7F, massege);
             textBox.Clear();
         }
 
@@ -57,29 +68,45 @@ namespace ChatTokenRing
 
         private void textBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key==Key.Enter)
+            if (e.Key == Key.Enter)
             {
                 string massege = textBox.Text;
-                DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm:ss") + ": " + massege);
+                DataLinkLayer.SendMessage(0x7F, massege);
                 textBox.Clear();
             }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if(MessageBox.Show("Вы уверены, что хотите закрыть окно?", "Подтверждение закрытия", MessageBoxButton.YesNo) == MessageBoxResult.No)
+            if (checkExit)
             {
-                e.Cancel = true;
+                Application.Current.MainWindow.Show();
+                checkExit = false;
             }
             else
             {
-                e.Cancel = false;
-                string logout = "Соединение разорвано";
-                DataLinkLayer.SendMessage(0x7F, logout);
-                //DataLinkLayer.CloseConnection();
-                Application.Current.MainWindow.Show();
+                if (MessageBox.Show("Вы уверены, что хотите закрыть окно?", "Подтверждение закрытия", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    e.Cancel = false;
+                    DataLinkLayer.CloseConnection();
+                    Application.Current.MainWindow.Show();
+                }
             }
         }
+
+        public static void exit()
+        {
+            if(MessageBox.Show("pizda yhodi", "zakrilsya nahyi", MessageBoxButton.OK)==MessageBoxResult.OK)
+            {
+                ths.Dispatcher.Invoke(() => { checkExit = true; ths.Close(); });
+            }
+            
+        }
+
 
         private void textBox_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -88,5 +115,6 @@ namespace ChatTokenRing
                 textBox.Text = "";
             }
         }
+
     }
 }
