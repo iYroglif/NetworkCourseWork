@@ -27,13 +27,18 @@ namespace ChatTokenRing
 
         public void inMessage(string message)
         {
+            if(message=="Соединение разорвано")
+            {
+                MessageBox.Show("Соединение разорвано");
+                Application.Current.MainWindow.Show();
+            }
             listBox.Items.Add(message);
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
             string massege = textBox.Text;
-            DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm") +": "+massege);
+            DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm:ss") +": "+massege);
             textBox.Clear();
         }
 
@@ -55,7 +60,7 @@ namespace ChatTokenRing
             if(e.Key==Key.Enter)
             {
                 string massege = textBox.Text;
-                DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm") + ": " + massege);
+                DataLinkLayer.SendMessage(0x7F, DateTime.Now.ToString("HH:mm:ss") + ": " + massege);
                 textBox.Clear();
             }
         }
@@ -69,7 +74,9 @@ namespace ChatTokenRing
             else
             {
                 e.Cancel = false;
-                DataLinkLayer.CloseConnection();
+                string logout = "Соединение разорвано";
+                DataLinkLayer.SendMessage(0x7F, logout);
+                //DataLinkLayer.CloseConnection();
                 Application.Current.MainWindow.Show();
             }
         }

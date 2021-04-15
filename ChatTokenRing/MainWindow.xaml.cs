@@ -30,17 +30,6 @@ namespace ChatTokenRing
 
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
-        {
-            ///DataLinkLayer.OpenConnection(textBoxUserName.Text);
-            chatWindow = new Chat();
-        }
-
-        private void D_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void buttonConnection_Click(object sender, RoutedEventArgs e)
         {
             if ((comboBox.SelectedItem != null) && (comboBox1.SelectedItem != null) && (textBoxUserName.Text != ""))
@@ -56,7 +45,6 @@ namespace ChatTokenRing
                     string outcomePort = comboBox1.SelectedItem.ToString();
 
                     DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
-
                     chatWindow = new Chat();
                     Application.Current.MainWindow.Hide();
                     chatWindow.Show();

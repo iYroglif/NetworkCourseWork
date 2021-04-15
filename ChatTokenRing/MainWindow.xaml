@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <CheckBox x:Name="D" Content="Ведущая станция" HorizontalAlignment="Left" Margin="114,276,0,0" VerticalAlignment="Top" Height="30" Width="160" Checked="D_Checked"/>
+        <CheckBox x:Name="D" Content="Ведущая станция" HorizontalAlignment="Left" Margin="114,276,0,0" VerticalAlignment="Top" Height="30" Width="160"/>
         <Button x:Name="buttonConnection" Content="Установить соединение" HorizontalAlignment="Left" Height="30" Margin="304,276,0,0" VerticalAlignment="Top" Width="376" Click="buttonConnection_Click"/>
         <Label x:Name="label" Content="Исходящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="114,92,0,0" VerticalAlignment="Top" Width="160"/>
         <Label x:Name="label_Copy" Content="Входящий COM-порт" HorizontalAlignment="Left" Height="30" Margin="114,153,0,0" VerticalAlignment="Top" Width="160"/>
