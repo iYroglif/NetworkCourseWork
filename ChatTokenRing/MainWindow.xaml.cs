@@ -30,17 +30,6 @@ namespace ChatTokenRing
 
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
-        {
-            ///DataLinkLayer.OpenConnection(textBoxUserName.Text);
-            chatWindow = new Chat();
-        }
-
-        private void D_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void buttonConnection_Click(object sender, RoutedEventArgs e)
         {
             if ((comboBox.SelectedItem != null) && (comboBox1.SelectedItem != null) && (textBoxUserName.Text != ""))
@@ -56,7 +45,6 @@ namespace ChatTokenRing
                     string outcomePort = comboBox1.SelectedItem.ToString();
 
                     DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
-
                     chatWindow = new Chat();
                     Application.Current.MainWindow.Hide();
                     chatWindow.Show();
@@ -97,22 +85,18 @@ namespace ChatTokenRing
 
         private void textBoxUserName_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(textBoxUserName.Text))
+            if (textBoxUserName.Text == "")
             {
-                textBoxUserName.Visibility = Visibility.Collapsed;
-                watermarkedText.Visibility = Visibility.Visible;
+                textBoxUserName.Text = "Введите имя пользователя";
             }
         }
 
-        private void watermarkedText_GotFocus(object sender, RoutedEventArgs e)
+        private void textBoxUserName_GotFocus(object sender, RoutedEventArgs e)
         {
-            watermarkedText.Visibility = Visibility.Collapsed;
-            textBoxUserName.Visibility = Visibility.Visible;
-        }
-
-        private void textBoxUserName_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
+            if (textBoxUserName.Text == "Введите имя пользователя")
+            {
+                textBoxUserName.Text = "";
+            }
         }
     }
 }
