@@ -10,8 +10,8 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="textBox" Text="Введите сообщение" LostFocus="textBox_LostFocus"  HorizontalAlignment="Left" Height="32" Margin="123,335,0,0" VerticalAlignment="Top" Width="371" KeyDown="textBox_KeyDown" GotFocus="textBox_GotFocus"/>
-        <Button x:Name="button" Content="Отправка" HorizontalAlignment="Left" Margin="550,335,0,0" VerticalAlignment="Top" Width="117" Height="32" Click="button_Click"/>
-        <ListBox x:Name="listBox" HorizontalAlignment="Left" Height="236" Margin="123,39,0,0" VerticalAlignment="Top" Width="544" SelectionChanged="listBox_SelectionChanged"/>
+        <TextBox x:Name="textBox" Text="Введите сообщение" LostFocus="textBox_LostFocus"  HorizontalAlignment="Left" Height="32" Margin="105,316,0,0" VerticalAlignment="Top" Width="429" KeyDown="textBox_KeyDown" GotFocus="textBox_GotFocus"/>
+        <Button x:Name="button" Content="Отправка" HorizontalAlignment="Left" Margin="572,316,0,0" VerticalAlignment="Top" Width="117" Height="32" Click="button_Click"/>
+        <ListBox x:Name="listBox" Height="236" Margin="105,52,105,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>
