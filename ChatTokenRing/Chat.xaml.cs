@@ -22,40 +22,41 @@ namespace ChatTokenRing
     {
         static System.Windows.Controls.ListBox lb;
         static Chat ths;
-        static bool checkExit=false;
+        static bool checkExit = false;
+        static Dictionary<byte, string> ul;
 
         public Chat()
         {
             InitializeComponent();
             lb = listBox;
             ths = this;
+            ul = new Dictionary<byte, string>();
         }
 
         public static void List(Dictionary<byte, string> userLists)
         {
-            Console.WriteLine(userLists);
-            //listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
-
+            ul = userLists;
         }
 
         public static void inMessage(string message, byte userAdress)
         {
+            string username = "";
+            foreach (byte b in ul.Keys)
+            {
+                if (b == userAdress)
+                {
+                    username = ul[b];
+                }
+            }
             Thread.Sleep(200);
-            lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + ": " + message); });
+            lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + username + ": " + message); });
         }
-
-
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
             string massege = textBox.Text;
             DataLinkLayer.SendMessage(0x7F, massege);
             textBox.Clear();
-        }
-
-        private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //DataLinkLayer
         }
 
         private void textBox_LostFocus(object sender, RoutedEventArgs e)
@@ -100,13 +101,12 @@ namespace ChatTokenRing
 
         public static void exit()
         {
-            if(MessageBox.Show("pizda yhodi", "zakrilsya nahyi", MessageBoxButton.OK)==MessageBoxResult.OK)
+            if (MessageBox.Show("pizda yhodi", "zakrilsya nahyi", MessageBoxButton.OK) == MessageBoxResult.OK)
             {
                 ths.Dispatcher.Invoke(() => { checkExit = true; ths.Close(); });
             }
-            
-        }
 
+        }
 
         private void textBox_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -115,6 +115,5 @@ namespace ChatTokenRing
                 textBox.Text = "";
             }
         }
-
     }
 }
