@@ -347,7 +347,7 @@ namespace ChatTokenRing
                         string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (string item in items)
                         {
-                            string[] tmp = item.Trim('[', ']').Split(',');
+                            string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                             users.Add(Convert.ToByte(tmp[0]), tmp[1]);
                         }
                         Chat.List(users);
