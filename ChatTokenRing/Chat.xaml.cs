@@ -49,7 +49,7 @@ namespace ChatTokenRing
                 }
             }
             Thread.Sleep(200);
-            lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + username + ": " + message); });
+            lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") +" "+ username + ": " + message); });
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
@@ -101,7 +101,7 @@ namespace ChatTokenRing
 
         public static void exit()
         {
-            if (MessageBox.Show("pizda yhodi", "zakrilsya nahyi", MessageBoxButton.OK) == MessageBoxResult.OK)
+            if (MessageBox.Show("Другой пользователь вышел из программы, разрыв соединения", "Разрыв соединения", MessageBoxButton.OK) == MessageBoxResult.OK)
             {
                 ths.Dispatcher.Invoke(() => { checkExit = true; ths.Close(); });
             }
