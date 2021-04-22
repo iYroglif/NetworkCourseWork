@@ -107,16 +107,16 @@ namespace ChatTokenRing
                         
                         if ((string)lbl == username)
                         {
-                            Style styl = new Style();
-                            styl.Setters.Add(new Setter { Property=Control.ForegroundProperty, Value=new SolidColorBrush(Colors.Red)});
-                            lb1.ItemContainerStyle = styl;
+                            //Style styl = new Style();
+                            //styl.Setters.Add(new Setter { Property=Control.ForegroundProperty, Value=new SolidColorBrush(Colors.Red)});
+                            //lb1.ItemContainerStyle = styl;
                             //FontStyle fontStyle = lb1.FontStyle;
                             //fontStyle
                             lb1.Items.Remove(lbl);
                             lb1.Items.Insert(0, lbl);
-                            Style stol = new Style();
-                            stol.Setters.Add(new Setter { Property = Control.ForegroundProperty, Value = new SolidColorBrush(Colors.Black) });
-                            lb1.ItemContainerStyle = stol;
+                            //Style stol = new Style();
+                            //stol.Setters.Add(new Setter { Property = Control.ForegroundProperty, Value = new SolidColorBrush(Colors.Black) });
+                            //lb1.ItemContainerStyle = stol;
                             break;
                         }
                     }
