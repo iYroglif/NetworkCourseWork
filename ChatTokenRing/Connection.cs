@@ -56,6 +56,11 @@ namespace ChatTokenRing
                 outcomePort.Open();
             }
 
+            if (incomePort.BytesToRead > 0)
+            {
+                ReadBytes();
+            }
+
             return (incomePort.IsOpen && outcomePort.IsOpen);
         }
 
@@ -84,9 +89,17 @@ namespace ChatTokenRing
         }
 
         /// <summary>
-        /// Получение байтов
+        /// Ивент на получение байтов
         /// </summary>
-        public static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
+        static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
+        {
+            ReadBytes();
+        }
+
+        /// <summary>
+        /// Считывание байтов
+        /// </summary>
+        static void ReadBytes()
         {
             byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
             lock (glocker)
