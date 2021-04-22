@@ -243,7 +243,7 @@ namespace ChatTokenRing
     {
         static byte? userAddress = null;
         static string userNickname;
-        static Frame lastFrame;
+        static Queue<Frame> lastFrames = new Queue<Frame>();
 
         /// <summary>
         /// Установка логического соединения
@@ -266,7 +266,8 @@ namespace ChatTokenRing
         static public void SendFrame(Frame frame)
         {
             // ??? token ring
-            lastFrame = frame;
+            if (frame.type != Frame.Type.ACK)
+                lastFrames.Enqueue(frame);
             // !!! Отправка массива байтов на физический уровень (byte[])frame;
             Connection.SendBytes((byte[])frame);
         }
@@ -380,6 +381,7 @@ namespace ChatTokenRing
                         if (frame.destination == (byte)userAddress)
                         {
                             // token ring
+                            lastFrames.Dequeue();
                         }
                         else
                         {
@@ -390,7 +392,7 @@ namespace ChatTokenRing
                     case Frame.Type.Ret:
                         if (frame.destination == (byte)userAddress)
                         {
-                            SendFrame(lastFrame); // ??? Просто последний отправленный кадр или последний отправленный кадр данному пользователю? 
+                            SendFrame(lastFrames.Dequeue()); // ??? Просто последний отправленный кадр или последний отправленный кадр данному пользователю? 
                         }
                         else
                         {
