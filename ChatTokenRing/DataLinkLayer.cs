@@ -323,7 +323,7 @@ namespace ChatTokenRing
 
                             //(System.Windows.Application.Current.MainWindow as MainWindow).Dispatcher.Invoke(() => { (System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
                             //Dispatcher.Invoke((MethodInvoker)delegate { chwindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
-                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
+                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure, frame.destination);
                             //mv.chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
                             //object v = System.Windows.Forms.Control.Invoke( (MethodInvoker)delegate { });
                             //(System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
@@ -350,7 +350,7 @@ namespace ChatTokenRing
                             string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                             users.Add(Convert.ToByte(tmp[0]), tmp[1]);
                         }
-                        Chat.List(users);
+                        Chat.List(users, userAddress);
                         // !!! Передача списка пользователей на пользовательский уровень (users-словарь пользователей, значение ключей-имена пользователей(string))
                         if (userAddress == null)
                         {
