@@ -34,6 +34,9 @@ namespace ChatTokenRing
             lkl = new Dictionary<string, ListBox>();
             lkl.Add("Общий", new ListBox());
             InitializeComponent();
+            listBox1.Items.Add("Общий");
+            listBox1.SelectedItem = listBox1.Items[0];
+            panelka.Children.Add(lkl["Общий"]);
             panel = panelka;
             lb1 = listBox1;
             ths = this;
@@ -225,13 +228,13 @@ namespace ChatTokenRing
 
         private void listBox1_Initialized(object sender, EventArgs e)
         {
-            listBox1.Items.Add("Общий");
-            listBox1.SelectedItem = listBox1.Items[0];
+            //listBox1.Items.Add("Общий");
+            //listBox1.SelectedItem = listBox1.Items[0];
         }
 
         private void panelka_Initialized(object sender, EventArgs e)
         {
-            panelka.Children.Add(lkl["Общий"]);
+            //panelka.Children.Add(lkl["Общий"]);
         }
     }
 }
