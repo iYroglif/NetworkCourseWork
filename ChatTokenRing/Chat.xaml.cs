@@ -105,7 +105,7 @@ namespace ChatTokenRing
                     foreach (var lbl in lb1.Items)
                     {
                         
-                        if ((string)lbl == username)
+                        if ((string)lbl == username1)
                         {
                             //Style styl = new Style();
                             //styl.Setters.Add(new Setter { Property=Control.ForegroundProperty, Value=new SolidColorBrush(Colors.Red)});
