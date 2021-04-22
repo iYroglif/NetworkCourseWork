@@ -250,9 +250,10 @@ namespace ChatTokenRing
         /// </summary>
         static public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
         {
+
+            userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster);
             // !!! Установка физического соединения
-            userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
             if (isMaster)
             {
                 userAddress = 1;

@@ -44,8 +44,8 @@ namespace ChatTokenRing
                     string incomePort = comboBox.SelectedItem.ToString();
                     string outcomePort = comboBox1.SelectedItem.ToString();
 
-                    DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
                     chatWindow = new Chat();
+                    DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text);
                     Application.Current.MainWindow.Hide();
                     chatWindow.Show();
                 }
