@@ -88,35 +88,16 @@ namespace ChatTokenRing
         {
             lock(slocker)
             {
-                Thread.Sleep(50);
-
-                try
+                if (incomePort.IsOpen && incomePort.DsrHolding)
                 {
-                    if (incomePort.IsOpen && incomePort.DsrHolding)
-                    {
-                        outcomePort.Write(outputVect, 0, outputVect.Length);
-                        //Thread.Sleep(100);
-                    }
-                    else
-                    {
-                        //Соединение закрыто
-                    }
+                    outcomePort.Write(outputVect, 0, outputVect.Length);
+                    //Thread.Sleep(100);
                 }
-                catch
+                else
                 {
-                    Thread.CurrentThread.Interrupt();
+                    //Соединение закрыто
                 }
             }
-        }
-
-        /// <summary>
-        /// Ивент на получение байтов
-        /// </summary>
-        static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
-        {
-            Thread myThread = new Thread(new ThreadStart(ReadBytes));
-            myThread.Start(); // запускаем поток
-            //ReadBytes();
         }
 
         /// <summary>
@@ -124,30 +105,17 @@ namespace ChatTokenRing
         /// </summary>
         static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
-            if (incomePort.BytesToRead > 2)
+            byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
+            lock (glocker)
             {
-                byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
-                lock (glocker)
-                {
-                    Thread.Sleep(10);
-                    int bytes = incomePort.BytesToRead;
-                    inputVect = new byte[bytes];
+                Thread.Sleep(10);
+                int bytes = incomePort.BytesToRead;
+                inputVect = new byte[bytes];
 
-                    // Записываем в массив данные от ком порта.
-                    try
-                    {
-                        incomePort.Read(inputVect, 0, bytes);
-                    }
-                    catch
-                    {
-                        Thread.CurrentThread.Interrupt();
-                    }
-                }
-                if (inputVect.Length > 2)
-                {
-                    DataLinkLayer.HandleFrame(inputVect);
-                }
-            }
+                // Записываем в массив данные от ком порта.
+                incomePort.Read(inputVect, 0, bytes);
+              }
+            DataLinkLayer.HandleFrame(inputVect);
         }
     }
 }
