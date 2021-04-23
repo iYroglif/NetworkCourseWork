@@ -241,23 +241,28 @@ namespace ChatTokenRing
 
     abstract class DataLinkLayer
     {
-        static byte? userAddress = null;
-        static string userNickname;
-        static Queue<Frame> lastFrames = new Queue<Frame>();
+        static byte? userAddress = null; // Адрес пользователя
+        static string userNickname; // Никнейм пользователя
+        static Queue<Frame> sendingFrames = new Queue<Frame>(); // Буфер ожидающих к отправлению сообщений (ждущих маркер)
+        static AutoResetEvent waitACC = new AutoResetEvent(false); // Событие прихода кадра подтверждения успешной доставки сообщения
+        static AutoResetEvent recdRet = new AutoResetEvent(false); // Событие прихода кадра на повторную отправку сообщения
 
         /// <summary>
         /// Установка логического соединения
         /// </summary>
         static public void OpenConnection(string incomePortName, string outcomePortName, bool isMaster, string userName)
         {
+            userAddress = null; // Обнуление статических переменных
+            userNickname = userName; // Получение никнейма с пользовательского уровня
+            sendingFrames = new Queue<Frame>(); // Обнуление статических переменных
+            waitACC = new AutoResetEvent(false); // Обнуление статических переменных
+            recdRet = new AutoResetEvent(false); // Обнуление статических переменных
 
-            userNickname = userName;// !!! Получение никнейма с пользовательского уровня (my)
-            Connection.OpenPorts(incomePortName, outcomePortName, isMaster);
-            // !!! Установка физического соединения
-            if (isMaster)
+            Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
+            if (isMaster) // Если станция ведущая
             {
                 userAddress = 1;
-                SendFrame(new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']')));
+                Connection.SendBytes((byte[])new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']'))); // Отправка Link кадра (маркера)
             }
         }
 
@@ -266,13 +271,52 @@ namespace ChatTokenRing
         /// </summary>
         static public void SendFrame(Frame frame)
         {
-            // ??? token ring
-            if (frame.type != Frame.Type.ACK)
-                lastFrames.Enqueue(frame);
-            // !!! Отправка массива байтов на физический уровень (byte[])frame;
-            Connection.SendBytes((byte[])frame);
+            if ((frame.type == Frame.Type.ACK) || (frame.type == Frame.Type.Ret) || (frame.type == Frame.Type.Uplink))
+            {
+                Connection.SendBytes((byte[])frame);
+            }
+            else
+            {
+                sendingFrames.Enqueue(frame);
+            }
         }
 
+        /// <summary>
+        /// Отправка кадров при наличии маркера
+        /// </summary>
+        static public void SendFramesToken()
+        {
+            Frame tmp;
+            do
+            {
+                tmp = sendingFrames.Dequeue();
+                if ((tmp.destination != 0x7F) || (tmp.type == Frame.Type.Link))
+                {
+                    waitACC.Reset();
+                    recdRet.Reset();
+                    Connection.SendBytes((byte[])tmp);
+                    try
+                    {
+                        while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 5000) == 0))
+                        {
+                            Connection.SendBytes((byte[])tmp);
+                        }
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Connection.SendBytes((byte[])tmp);
+                }
+            } while (tmp.type != Frame.Type.Link);
+        }
+
+        /// <summary>
+        /// Отправка сообщения с пользовательского уровня
+        /// </summary>
         static public void SendMessage(byte? des, string mes)
         {
             SendFrame(new Frame((byte)userAddress, Frame.Type.I, des, Encoding.UTF8.GetBytes(mes)));
@@ -283,8 +327,7 @@ namespace ChatTokenRing
         /// </summary>
         static public void CloseConnection()
         {
-            SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink));
-            // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+            SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink)); // Отправка кадра разрыва соединения
             Connection.ClosePorts();
         }
 
@@ -307,7 +350,17 @@ namespace ChatTokenRing
                     case Frame.Type.I:
                         if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress))
                         {
-                            SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                            if (frame.destination != 0x7F)
+                            {
+                                if (frame.departure == (byte)userAddress)
+                                {
+                                    waitACC.Set(); // Нет смысла посылать кадр об успешной доставке самому себе
+                                }
+                                else
+                                {
+                                    SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                                }
+                            }
 
                             //await Task.Run(() => (Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)));
 
@@ -339,7 +392,7 @@ namespace ChatTokenRing
                         }
                         else
                         {
-                            SendFrame(frame);
+                            Connection.SendBytes((byte[])frame);
                         }
                         break;
 
@@ -362,18 +415,34 @@ namespace ChatTokenRing
                         if (!users.ContainsKey((byte)userAddress))
                         {
                             // ??? Может ли быть случай остутствия никнейма к этому моменту? userNickname = "nick2";// !!! Получение никнейма с пользовательского уровня
+                            bool flg;
+                            do
+                            {
+                                flg = false;
+                                foreach (var us in users)
+                                {
+                                    if (us.Value == userNickname)
+                                    {
+                                        userNickname += " (1)";
+                                        flg = true;
+                                        break;
+                                    }
+                                }
+                            } while (flg);
+
                             users.Add((byte)userAddress, userNickname);
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
                         }
-                        Thread.Sleep(150); // если будет норм работать без этого то нужно убрать
+                        SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                        frame.departure = (byte)userAddress;
                         SendFrame(frame);
+                        SendFramesToken();
                         break;
 
                     case Frame.Type.Uplink:
-                        SendFrame(frame);
+                        Connection.SendBytes((byte[])frame);
                         // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
-                        //Chat.exit();
                         Connection.ClosePorts();
                         Chat.exit();
                         break;
@@ -381,8 +450,7 @@ namespace ChatTokenRing
                     case Frame.Type.ACK:
                         if (frame.destination == (byte)userAddress)
                         {
-                            // token ring
-                            lastFrames.Dequeue();
+                            waitACC.Set();
                         }
                         else
                         {
@@ -393,7 +461,7 @@ namespace ChatTokenRing
                     case Frame.Type.Ret:
                         if (frame.destination == (byte)userAddress)
                         {
-                            SendFrame(lastFrames.Dequeue()); // ??? Просто последний отправленный кадр или последний отправленный кадр данному пользователю? 
+                            recdRet.Set();
                         }
                         else
                         {
