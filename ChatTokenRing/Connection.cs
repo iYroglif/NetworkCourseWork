@@ -39,12 +39,13 @@ namespace ChatTokenRing
             incomePort.Parity = Parity.Even;
             incomePort.Handshake = Handshake.RequestToSend;
             incomePort.BaudRate = 9600;
-            //this.incomePort.ReadBufferSize = 4 * 1024; // TODO: Надо пересчитать размер буфера.
+            incomePort.ReadBufferSize = 4096;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
 
             outcomePort.Parity = Parity.Even;
             outcomePort.Handshake = Handshake.RequestToSend;
             outcomePort.BaudRate = 9600;
+            incomePort.WriteBufferSize = 4096;
             outcomePort.DtrEnable = true;
 
             // Открываем порты.
@@ -90,7 +91,7 @@ namespace ChatTokenRing
                 if (incomePort.IsOpen && incomePort.DsrHolding)
                 {
                     outcomePort.Write(outputVect, 0, outputVect.Length);
-                    Thread.Sleep(100);
+                    //Thread.Sleep(100);
                 }
                 else
                 {
