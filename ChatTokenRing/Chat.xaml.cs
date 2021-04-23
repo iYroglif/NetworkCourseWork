@@ -125,7 +125,7 @@ namespace ChatTokenRing
                     }
                 }
             });
-            Thread.Sleep(200);
+            //Thread.Sleep(50);
             lkl[username1].Dispatcher.Invoke(() => { lkl[username1].Items.Add(DateTime.Now.ToString("HH:mm") + " " + username + ": " + message); });
             //lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + " " + username + ": " + message); });
         }
