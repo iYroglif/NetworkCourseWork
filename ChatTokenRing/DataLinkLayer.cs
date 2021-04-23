@@ -297,7 +297,7 @@ namespace ChatTokenRing
                     Connection.SendBytes((byte[])tmp);
                     try
                     {
-                        while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 5000) == 0))
+                        while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0))
                         {
                             Connection.SendBytes((byte[])tmp);
                         }
@@ -448,9 +448,18 @@ namespace ChatTokenRing
                         break;
 
                     case Frame.Type.ACK:
-                        if (frame.destination == (byte)userAddress)
+
+
+                        if (userAddress != null )
                         {
-                            waitACC.Set();
+                            if (frame.destination == (byte)userAddress)
+                            {
+                                waitACC.Set();
+                            }
+                            else
+                            {
+                                SendFrame(frame);
+                            }
                         }
                         else
                         {
