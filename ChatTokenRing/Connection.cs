@@ -39,12 +39,14 @@ namespace ChatTokenRing
             incomePort.Parity = Parity.Even;
             incomePort.Handshake = Handshake.RequestToSend;
             incomePort.BaudRate = 9600;
-            //this.incomePort.ReadBufferSize = 4 * 1024; // TODO: Надо пересчитать размер буфера.
+            incomePort.ReadBufferSize = 4096;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
 
             outcomePort.Parity = Parity.Even;
             outcomePort.Handshake = Handshake.RequestToSend;
             outcomePort.BaudRate = 9600;
+            incomePort.WriteBufferSize = 4096;
+            outcomePort.DtrEnable = true;
 
             // Открываем порты.
             if (!incomePort.IsOpen)
@@ -56,9 +58,12 @@ namespace ChatTokenRing
                 outcomePort.Open();
             }
 
-            if (incomePort.BytesToRead > 0)
+            if (isMaster)
             {
-                ReadBytes();
+                while (!incomePort.DsrHolding)
+                {
+                    Thread.Sleep(100);
+                }
             }
 
             return (incomePort.IsOpen && outcomePort.IsOpen);
@@ -81,36 +86,35 @@ namespace ChatTokenRing
         /// </summary>
         public static void SendBytes(byte[] outputVect)
         {
-            lock (slocker)
+            lock(slocker)
             {
-                outcomePort.Write(outputVect, 0, outputVect.Length);
-                Thread.Sleep(100);
+                if (incomePort.IsOpen && incomePort.DsrHolding)
+                {
+                    outcomePort.Write(outputVect, 0, outputVect.Length);
+                    //Thread.Sleep(100);
+                }
+                else
+                {
+                    //Соединение закрыто
+                }
             }
-        }
-
-        /// <summary>
-        /// Ивент на получение байтов
-        /// </summary>
-        static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
-        {
-            ReadBytes();
         }
 
         /// <summary>
         /// Считывание байтов
         /// </summary>
-        static void ReadBytes()
+        static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
             byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
             lock (glocker)
             {
-                Thread.Sleep(50);
+                Thread.Sleep(10);
                 int bytes = incomePort.BytesToRead;
                 inputVect = new byte[bytes];
 
                 // Записываем в массив данные от ком порта.
                 incomePort.Read(inputVect, 0, bytes);
-            }
+              }
             DataLinkLayer.HandleFrame(inputVect);
         }
     }
