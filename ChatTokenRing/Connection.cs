@@ -39,12 +39,14 @@ namespace ChatTokenRing
             incomePort.Parity = Parity.Even;
             incomePort.Handshake = Handshake.RequestToSend;
             incomePort.BaudRate = 9600;
-            //this.incomePort.ReadBufferSize = 4 * 1024; // TODO: Надо пересчитать размер буфера.
+            incomePort.ReadBufferSize = 4096;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
 
             outcomePort.Parity = Parity.Even;
             outcomePort.Handshake = Handshake.RequestToSend;
             outcomePort.BaudRate = 9600;
+            incomePort.WriteBufferSize = 4096;
+            outcomePort.DtrEnable = true;
 
             // Открываем порты.
             if (!incomePort.IsOpen)
@@ -56,9 +58,12 @@ namespace ChatTokenRing
                 outcomePort.Open();
             }
 
-            if (incomePort.BytesToRead > 0)
+            if (isMaster)
             {
-                ReadBytes();
+                while (!incomePort.DsrHolding)
+                {
+                    Thread.Sleep(100);
+                }
             }
 
             return (incomePort.IsOpen && outcomePort.IsOpen);
@@ -81,19 +86,26 @@ namespace ChatTokenRing
         /// </summary>
         public static void SendBytes(byte[] outputVect)
         {
-            lock (slocker)
+            lock(slocker)
             {
                 Thread.Sleep(50);
 
                 try
                 {
-                    outcomePort.Write(outputVect, 0, outputVect.Length);
+                    if (incomePort.IsOpen && incomePort.DsrHolding)
+                    {
+                        outcomePort.Write(outputVect, 0, outputVect.Length);
+                        //Thread.Sleep(100);
+                    }
+                    else
+                    {
+                        //Соединение закрыто
+                    }
                 }
                 catch
                 {
                     Thread.CurrentThread.Interrupt();
                 }
-
             }
         }
 
@@ -110,7 +122,7 @@ namespace ChatTokenRing
         /// <summary>
         /// Считывание байтов
         /// </summary>
-        static void ReadBytes()
+        static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
             if (incomePort.BytesToRead > 2)
             {
