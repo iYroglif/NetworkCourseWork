@@ -83,8 +83,17 @@ namespace ChatTokenRing
         {
             lock (slocker)
             {
-                outcomePort.Write(outputVect, 0, outputVect.Length);
-                Thread.Sleep(100);
+                Thread.Sleep(50);
+
+                try
+                {
+                    outcomePort.Write(outputVect, 0, outputVect.Length);
+                }
+                catch
+                {
+                    Thread.CurrentThread.Interrupt();
+                }
+
             }
         }
 
@@ -93,7 +102,9 @@ namespace ChatTokenRing
         /// </summary>
         static void RecieveBytes(object sender, SerialDataReceivedEventArgs e)
         {
-            ReadBytes();
+            Thread myThread = new Thread(new ThreadStart(ReadBytes));
+            myThread.Start(); // запускаем поток
+            //ReadBytes();
         }
 
         /// <summary>
@@ -101,17 +112,30 @@ namespace ChatTokenRing
         /// </summary>
         static void ReadBytes()
         {
-            byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
-            lock (glocker)
+            if (incomePort.BytesToRead > 2)
             {
-                Thread.Sleep(50);
-                int bytes = incomePort.BytesToRead;
-                inputVect = new byte[bytes];
+                byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
+                lock (glocker)
+                {
+                    Thread.Sleep(10);
+                    int bytes = incomePort.BytesToRead;
+                    inputVect = new byte[bytes];
 
-                // Записываем в массив данные от ком порта.
-                incomePort.Read(inputVect, 0, bytes);
+                    // Записываем в массив данные от ком порта.
+                    try
+                    {
+                        incomePort.Read(inputVect, 0, bytes);
+                    }
+                    catch
+                    {
+                        Thread.CurrentThread.Interrupt();
+                    }
+                }
+                if (inputVect.Length > 2)
+                {
+                    DataLinkLayer.HandleFrame(inputVect);
+                }
             }
-            DataLinkLayer.HandleFrame(inputVect);
         }
     }
 }
