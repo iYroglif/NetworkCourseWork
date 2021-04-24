@@ -246,7 +246,7 @@ namespace ChatTokenRing
         static Queue<Frame> sendingFrames = new Queue<Frame>(); // Буфер ожидающих к отправлению сообщений (ждущих маркер)
         static AutoResetEvent waitACC = new AutoResetEvent(false); // Событие прихода кадра подтверждения успешной доставки сообщения
         static AutoResetEvent recdRet = new AutoResetEvent(false); // Событие прихода кадра на повторную отправку сообщения
-        static AutoResetEvent unDisc = new AutoResetEvent(true); // Событие прихода кадра разрыва соединения
+        static AutoResetEvent unDisc = new AutoResetEvent(false); // Событие прихода кадра разрыва соединения
 
         /// <summary>
         /// Установка логического соединения
@@ -258,7 +258,7 @@ namespace ChatTokenRing
             sendingFrames = new Queue<Frame>(); // Обнуление статических переменных
             waitACC = new AutoResetEvent(false); // Обнуление статических переменных
             recdRet = new AutoResetEvent(false); // Обнуление статических переменных
-            unDisc = new AutoResetEvent(true);
+            unDisc = new AutoResetEvent(false);
 
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
             if (isMaster) // Если станция ведущая
@@ -273,7 +273,7 @@ namespace ChatTokenRing
         /// </summary>
         static public void SendFrameToConnection(byte[] bytes)
         {
-            if (unDisc.WaitOne(1))
+            if (!unDisc.WaitOne(1))
             {
                 Connection.SendBytes(bytes);
             }
@@ -310,7 +310,7 @@ namespace ChatTokenRing
                     SendFrameToConnection((byte[])tmp);
                     try
                     {
-                        while ((!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0)) && unDisc.WaitOne(1))
+                        while ((!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0)) && !unDisc.WaitOne(1))
                         {
                             SendFrameToConnection((byte[])tmp);
                         }
@@ -341,6 +341,7 @@ namespace ChatTokenRing
         static public void CloseConnection()
         {
             SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink)); // Отправка кадра разрыва соединения
+            unDisc.Set();
             Connection.ClosePorts();
         }
 
@@ -456,7 +457,7 @@ namespace ChatTokenRing
                     case Frame.Type.Uplink:
                         SendFrameToConnection((byte[])frame);
                         // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
-                        unDisc.Reset();
+                        unDisc.Set();
                         Connection.ClosePorts();
                         Chat.exit();
                         break;
