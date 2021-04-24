@@ -7,6 +7,9 @@ using System.Diagnostics;
 
 namespace ChatTokenRing
 {
+    /// <summary>
+    /// Класс описывающий кадр
+    /// </summary>
     class Frame
     {
         /// <summary>
@@ -16,8 +19,8 @@ namespace ChatTokenRing
         {
             I,      // Информационный кадр
             Link,   // Кадр установки соединения
-            Uplink, // Кадр разрыва соединения
-            ACK,    // Кадр подтверждения безошибочного приема тестового сообщения
+            Dis,    // Кадр разрыва соединения
+            ACK,    // Кадр подтверждения безошибочного приема кадра
             Ret     // Кадр запроса повторения последнего отправленного кадра
         }
 
@@ -27,6 +30,9 @@ namespace ChatTokenRing
         public byte? data_length = null;    // Длина поля данных
         public byte[] data = null;          // Данные
 
+        /// <summary>
+        /// Конструктор кадра
+        /// </summary>
         public Frame(byte dep, Type type, byte? des = null, byte[] bytes = null)
         {
             departure = dep;
@@ -95,7 +101,7 @@ namespace ChatTokenRing
                     }
                     break;
 
-                case Type.Uplink:
+                case Type.Dis:
                     if (des == null)
                     {
                         destination = 0x7F; // Адрес получателя широковещательный
@@ -157,11 +163,14 @@ namespace ChatTokenRing
 
         public Frame() { }
 
+        /// <summary>
+        /// Преобразование массива байтов в кадр (true - успешно, false - не удалось)
+        /// </summary>
         public bool TryConvertFromBytes(byte[] bytes)
         {
             if (bytes[0] != 0xFF) // Проверка на стартовый байт
             {
-                // ошибка кадра?
+                // Ошибка: неверный стартовый байт
                 return false;
             }
             else
@@ -183,7 +192,7 @@ namespace ChatTokenRing
 
                     if (data_length > bytes.Length - 6)
                     {
-                        // Длина данных больше чем массив байтов
+                        // Ошибка: длина данных больше чем массив байтов
                         return false;
                     }
 
@@ -197,13 +206,16 @@ namespace ChatTokenRing
 
                 if (bytes[i + 4] != 0xFF) // Проверка на стоповый байт
                 {
-                    // ошибка кадра?
+                    // Ошибка: неверный стоповый байт
                     return false;
                 }
                 return true;
             }
         }
 
+        /// <summary>
+        /// Преобразование кадра в массив байтов
+        /// </summary>
         public static explicit operator byte[](Frame frame)
         {
             byte[] bytes;
@@ -255,8 +267,8 @@ namespace ChatTokenRing
             sendingFrames = new Queue<Frame>(); // Обнуление статических переменных
             waitACC = new AutoResetEvent(false); // Обнуление статических переменных
             recdRet = new AutoResetEvent(false); // Обнуление статических переменных
-            Disc = new AutoResetEvent(false);
-            Lnk = new AutoResetEvent(false);
+            Disc = new AutoResetEvent(false); // Обнуление статических переменных
+            Lnk = new AutoResetEvent(false); // Обнуление статических переменных
 
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
             if (isMaster) // Если станция ведущая
@@ -278,7 +290,7 @@ namespace ChatTokenRing
         /// </summary>
         static public void SendFrameToConnection(byte[] bytes)
         {
-            if (!Disc.WaitOne(1))
+            if (!Disc.WaitOne(1)) // Если кадр разрыва соединения не приходил
             {
                 Connection.SendBytes(bytes);
             }
@@ -293,13 +305,13 @@ namespace ChatTokenRing
         /// </summary>
         static public void SendFrame(Frame frame)
         {
-            if ((frame.type == Frame.Type.ACK) || (frame.type == Frame.Type.Ret) || (frame.type == Frame.Type.Uplink))
+            if ((frame.type == Frame.Type.ACK) || (frame.type == Frame.Type.Ret) || (frame.type == Frame.Type.Dis)) // Служебные кадры передаются без владения маркера
             {
                 SendFrameToConnection((byte[])frame);
             }
             else
             {
-                sendingFrames.Enqueue(frame);
+                sendingFrames.Enqueue(frame); // Сохранение кадра для отправления когда будет захвачен маркер
             }
         }
 
@@ -312,13 +324,13 @@ namespace ChatTokenRing
             do
             {
                 tmp = sendingFrames.Dequeue();
-                if ((tmp.destination != 0x7F) || (tmp.type == Frame.Type.Link))
+                if ((tmp.destination != 0x7F) || (tmp.type == Frame.Type.Link)) // Для кадров с подтверждением успешной доставки
                 {
                     waitACC.Reset();
                     recdRet.Reset();
-                    SendFrameToConnection((byte[])tmp);
+                    SendFrameToConnection((byte[])tmp); // Отправка кадра на физический уровень
                     bool flg = false;
-                    while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, timeOut) == 0))
+                    while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, timeOut) == 0)) // Ожидание кадра успешной доставки или запроса на повторную отправку в случае ошибки
                     {
                         if (!Disc.WaitOne(1))
                         {
@@ -327,7 +339,7 @@ namespace ChatTokenRing
                                 flg = true;
                                 // !!! Соединение потеряно... Восстановление соединения...
                             }
-                            SendFrameToConnection((byte[])tmp);
+                            SendFrameToConnection((byte[])tmp); // Повторная отправка кадра
                         }
                         else
                         {
@@ -340,11 +352,11 @@ namespace ChatTokenRing
                         // !!! Соединение восстановлено
                     }
                 }
-                else
+                else // Для кадров без подтверждения успешной доставки
                 {
-                    SendFrameToConnection((byte[])tmp);
+                    SendFrameToConnection((byte[])tmp); // Отправка кадра на физический уровень
                 }
-            } while (tmp.type != Frame.Type.Link);
+            } while (tmp.type != Frame.Type.Link); // Выполнять пока маркер не отдан
         }
 
         /// <summary>
@@ -360,8 +372,8 @@ namespace ChatTokenRing
         /// </summary>
         static public void CloseConnection()
         {
-            SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink)); // Отправка кадра разрыва соединения
-            Disc.Set();
+            SendFrame(new Frame((byte)userAddress, Frame.Type.Dis)); // Отправка кадра разрыва соединения
+            Disc.Set(); // Событие разрыва соединения
             Connection.ClosePorts();
         }
 
@@ -371,17 +383,17 @@ namespace ChatTokenRing
         static public void HandleFrame(byte[] bytes)
         {
             Frame frame = new Frame();
-            if (!frame.TryConvertFromBytes(bytes))
+            if (!frame.TryConvertFromBytes(bytes)) // Попытка восстановить кадр из массива байтов
             {
                 Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
-                SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure));
+                SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure)); // Запрос на повторную отправку
             }
             else
             {
                 switch (frame.type)
                 {
-                    case Frame.Type.I:
-                        if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress))
+                    case Frame.Type.I: // Обработка информационного кадра
+                        if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress)) // Если кадр предназначен этой станции
                         {
                             if (frame.destination != 0x7F)
                             {
@@ -391,7 +403,7 @@ namespace ChatTokenRing
                                 }
                                 else
                                 {
-                                    SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                                    SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
                                 }
                             }
 
@@ -408,9 +420,9 @@ namespace ChatTokenRing
                         }
                         break;
 
-                    case Frame.Type.Link:
-                        Lnk.Set();
-                        Dictionary<byte, string> users = new Dictionary<byte, string>();
+                    case Frame.Type.Link: // Обработка маркера
+                        Lnk.Set(); // Событие прихода маркера
+                        Dictionary<byte, string> users = new Dictionary<byte, string>(); // Словарь пользователей
 
                         string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (string item in items)
@@ -426,6 +438,7 @@ namespace ChatTokenRing
                             userAddress = (byte?)(users.Last().Key + 1);
                         }
 
+                        // Если пользователь с таким именем уже есть
                         bool flg;
                         if (!users.ContainsKey((byte)userAddress))
                         {
@@ -447,10 +460,12 @@ namespace ChatTokenRing
                             frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                             frame.data_length = (byte?)frame.data.Length;
                         }
-                        SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure));
+                        SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
                         frame.departure = (byte)userAddress;
                         SendFrame(frame);
-                        SendFramesToken();
+                        SendFramesToken(); // Отправка сообщений с захваченным маркером
+
+                        // Ожидание возвращения маркера (проверка целостности соединения)
                         flg = false;
                         while (!Lnk.WaitOne(timeOut))
                         {
@@ -474,37 +489,38 @@ namespace ChatTokenRing
                         }
                         break;
 
-                    case Frame.Type.Uplink:
-                        SendFrameToConnection((byte[])frame);
-                        Disc.Set();
+                    case Frame.Type.Dis: // Обработка кадра разрыва соединения
+                        SendFrameToConnection((byte[])frame); // Отправка кадра разрыва соединения
+                        Disc.Set(); // Событие прихода кадра разрыва соединения
+
                         Connection.ClosePorts(); // Разрыв соединения на физическом уровне
-                        Chat.exit(); // Выход из приложения на пользовательском
+                        Chat.exit(); // Выход из приложения на пользовательском уровне
                         break;
 
-                    case Frame.Type.ACK:
+                    case Frame.Type.ACK: // Обработка кадра подтверждения безошибочного приема кадра
                         if (userAddress != null)
                         {
-                            if (frame.destination == (byte)userAddress)
+                            if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
                             {
-                                waitACC.Set();
+                                waitACC.Set(); // Событие прихода кадра подтверждения безошибочного приема кадра
                             }
-                            else
+                            else // Если кадр предназначался НЕ этой станции
                             {
                                 SendFrame(frame);
                             }
                         }
-                        else
+                        else // Если кадр предназначался НЕ этой станции
                         {
                             SendFrame(frame);
                         }
                         break;
 
-                    case Frame.Type.Ret:
-                        if (frame.destination == (byte)userAddress)
+                    case Frame.Type.Ret: // Обработка кадра запроса повторения последнего отправленного кадра
+                        if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
                         {
-                            recdRet.Set();
+                            recdRet.Set(); // Событие прихода кадра запроса повторения последнего отправленного кадра
                         }
-                        else
+                        else // Если кадр предназначался НЕ этой станции
                         {
                             SendFrame(frame);
                         }
