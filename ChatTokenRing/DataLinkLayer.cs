@@ -246,6 +246,7 @@ namespace ChatTokenRing
         static Queue<Frame> sendingFrames = new Queue<Frame>(); // Буфер ожидающих к отправлению сообщений (ждущих маркер)
         static AutoResetEvent waitACC = new AutoResetEvent(false); // Событие прихода кадра подтверждения успешной доставки сообщения
         static AutoResetEvent recdRet = new AutoResetEvent(false); // Событие прихода кадра на повторную отправку сообщения
+        static AutoResetEvent unDisc = new AutoResetEvent(true); // Событие прихода кадра разрыва соединения
 
         /// <summary>
         /// Установка логического соединения
@@ -257,12 +258,24 @@ namespace ChatTokenRing
             sendingFrames = new Queue<Frame>(); // Обнуление статических переменных
             waitACC = new AutoResetEvent(false); // Обнуление статических переменных
             recdRet = new AutoResetEvent(false); // Обнуление статических переменных
+            unDisc = new AutoResetEvent(true);
 
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
             if (isMaster) // Если станция ведущая
             {
                 userAddress = 1;
-                Connection.SendBytes((byte[])new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']'))); // Отправка Link кадра (маркера)
+                SendFrameToConnection((byte[])new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']'))); // Отправка Link кадра (маркера)
+            }
+        }
+
+        /// <summary>
+        /// Отправка кадра на физический уровень
+        /// </summary>
+        static public void SendFrameToConnection(byte[] bytes)
+        {
+            if (unDisc.WaitOne(1))
+            {
+                Connection.SendBytes(bytes);
             }
         }
 
@@ -273,7 +286,7 @@ namespace ChatTokenRing
         {
             if ((frame.type == Frame.Type.ACK) || (frame.type == Frame.Type.Ret) || (frame.type == Frame.Type.Uplink))
             {
-                Connection.SendBytes((byte[])frame);
+                SendFrameToConnection((byte[])frame);
             }
             else
             {
@@ -294,12 +307,12 @@ namespace ChatTokenRing
                 {
                     waitACC.Reset();
                     recdRet.Reset();
-                    Connection.SendBytes((byte[])tmp);
+                    SendFrameToConnection((byte[])tmp);
                     try
                     {
-                        while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0))
+                        while ((!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0)) && unDisc.WaitOne(1))
                         {
-                            Connection.SendBytes((byte[])tmp);
+                            SendFrameToConnection((byte[])tmp);
                         }
                     }
                     catch
@@ -309,7 +322,7 @@ namespace ChatTokenRing
                 }
                 else
                 {
-                    Connection.SendBytes((byte[])tmp);
+                    SendFrameToConnection((byte[])tmp);
                 }
             } while (tmp.type != Frame.Type.Link);
         }
@@ -392,7 +405,7 @@ namespace ChatTokenRing
                         }
                         else
                         {
-                            Connection.SendBytes((byte[])frame);
+                            SendFrameToConnection((byte[])frame);
                         }
                         break;
 
@@ -441,8 +454,9 @@ namespace ChatTokenRing
                         break;
 
                     case Frame.Type.Uplink:
-                        Connection.SendBytes((byte[])frame);
+                        SendFrameToConnection((byte[])frame);
                         // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
+                        unDisc.Reset();
                         Connection.ClosePorts();
                         Chat.exit();
                         break;
@@ -450,7 +464,7 @@ namespace ChatTokenRing
                     case Frame.Type.ACK:
 
 
-                        if (userAddress != null )
+                        if (userAddress != null)
                         {
                             if (frame.destination == (byte)userAddress)
                             {
