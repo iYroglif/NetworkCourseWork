@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Controls;
-using System.Windows.Threading;
 using System.Threading;
 using System.Diagnostics;
 
@@ -241,12 +236,14 @@ namespace ChatTokenRing
 
     abstract class DataLinkLayer
     {
+        static int timeOut = 2000; // Стандартный тайм-аут
         static byte? userAddress = null; // Адрес пользователя
         static string userNickname; // Никнейм пользователя
         static Queue<Frame> sendingFrames = new Queue<Frame>(); // Буфер ожидающих к отправлению сообщений (ждущих маркер)
         static AutoResetEvent waitACC = new AutoResetEvent(false); // Событие прихода кадра подтверждения успешной доставки сообщения
         static AutoResetEvent recdRet = new AutoResetEvent(false); // Событие прихода кадра на повторную отправку сообщения
-        static AutoResetEvent unDisc = new AutoResetEvent(false); // Событие прихода кадра разрыва соединения
+        static AutoResetEvent Disc = new AutoResetEvent(false); // Событие прихода кадра разрыва соединения
+        static AutoResetEvent Lnk = new AutoResetEvent(false); // Событие прихода Link-кадра
 
         /// <summary>
         /// Установка логического соединения
@@ -258,13 +255,21 @@ namespace ChatTokenRing
             sendingFrames = new Queue<Frame>(); // Обнуление статических переменных
             waitACC = new AutoResetEvent(false); // Обнуление статических переменных
             recdRet = new AutoResetEvent(false); // Обнуление статических переменных
-            unDisc = new AutoResetEvent(false);
+            Disc = new AutoResetEvent(false);
+            Lnk = new AutoResetEvent(false);
 
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
             if (isMaster) // Если станция ведущая
             {
                 userAddress = 1;
-                SendFrameToConnection((byte[])new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']'))); // Отправка Link кадра (маркера)
+                SendFrame(new Frame((byte)userAddress, Frame.Type.Link, bytes: Encoding.UTF8.GetBytes("[1, " + userNickname + ']'))); // Отправка Link кадра (маркера)
+                SendFramesToken();
+            }
+            else
+            {
+                // !!! Вывод сообщения о установлении соединения...
+                Lnk.WaitOne();
+                // !!! Вывод сообщения что соединение установлено
             }
         }
 
@@ -273,9 +278,13 @@ namespace ChatTokenRing
         /// </summary>
         static public void SendFrameToConnection(byte[] bytes)
         {
-            if (!unDisc.WaitOne(1))
+            if (!Disc.WaitOne(1))
             {
                 Connection.SendBytes(bytes);
+            }
+            else
+            {
+                Disc.Set();
             }
         }
 
@@ -308,16 +317,27 @@ namespace ChatTokenRing
                     waitACC.Reset();
                     recdRet.Reset();
                     SendFrameToConnection((byte[])tmp);
-                    try
+                    bool flg = false;
+                    while (!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, timeOut) == 0))
                     {
-                        while ((!(AutoResetEvent.WaitAny(new WaitHandle[] { waitACC, recdRet }, 2000) == 0)) && !unDisc.WaitOne(1))
+                        if (!Disc.WaitOne(1))
                         {
+                            if (!flg)
+                            {
+                                flg = true;
+                                // !!! Соединение потеряно... Восстановление соединения...
+                            }
                             SendFrameToConnection((byte[])tmp);
                         }
+                        else
+                        {
+                            Disc.Set();
+                            return;
+                        }
                     }
-                    catch
+                    if (flg)
                     {
-                        return;
+                        // !!! Соединение восстановлено
                     }
                 }
                 else
@@ -341,7 +361,7 @@ namespace ChatTokenRing
         static public void CloseConnection()
         {
             SendFrame(new Frame((byte)userAddress, Frame.Type.Uplink)); // Отправка кадра разрыва соединения
-            unDisc.Set();
+            Disc.Set();
             Connection.ClosePorts();
         }
 
@@ -354,8 +374,7 @@ namespace ChatTokenRing
             if (!frame.TryConvertFromBytes(bytes))
             {
                 Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
-                SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? по идее соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure));
-                // Ошибка: нужен запрос на повторную отправку и повторная отправка
+                SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure));
             }
             else
             {
@@ -376,29 +395,8 @@ namespace ChatTokenRing
                                 }
                             }
 
-                            //await Task.Run(() => (Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)));
+                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure, frame.destination); // Передача сообщения на пользовательский уровень
 
-                            /*Dispatcher.Invoke(async () => {
-
-                                listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length));
-
-                                //(Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length))
-                            });*/
-
-                            //Thread.Sleep(200); // !!! работающий костыль (макс, нужно поправить)
-                            //listBox.Dispatcher.Invoke(() => { listBox.Items.Add(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length)); });
-                            //System.Windows.Forms.Control.Invoke((MethodInvoker)delegate { (System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
-
-
-                            //(System.Windows.Application.Current.MainWindow as MainWindow).Dispatcher.Invoke(() => { (System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
-                            //Dispatcher.Invoke((MethodInvoker)delegate { chwindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure); });
-                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure, frame.destination);
-                            //mv.chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
-                            //object v = System.Windows.Forms.Control.Invoke( (MethodInvoker)delegate { });
-                            //(System.Windows.Application.Current.MainWindow as MainWindow).chatWindow.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
-                            //Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure);
-
-                            // !!! Передача сообщения на пользовательский уровень frame.data
                             if ((frame.destination == 0x7F) && (frame.departure != userAddress))
                             {
                                 SendFrame(frame);
@@ -411,6 +409,7 @@ namespace ChatTokenRing
                         break;
 
                     case Frame.Type.Link:
+                        Lnk.Set();
                         Dictionary<byte, string> users = new Dictionary<byte, string>();
 
                         string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
@@ -419,17 +418,17 @@ namespace ChatTokenRing
                             string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                             users.Add(Convert.ToByte(tmp[0]), tmp[1]);
                         }
-                        Chat.List(users, userAddress);
-                        // !!! Передача списка пользователей на пользовательский уровень (users-словарь пользователей, значение ключей-имена пользователей(string))
+
+                        Chat.List(users, userAddress); // Передача списка пользователей на пользовательский уровень
+
                         if (userAddress == null)
                         {
                             userAddress = (byte?)(users.Last().Key + 1);
                         }
 
+                        bool flg;
                         if (!users.ContainsKey((byte)userAddress))
                         {
-                            // ??? Может ли быть случай остутствия никнейма к этому моменту? userNickname = "nick2";// !!! Получение никнейма с пользовательского уровня
-                            bool flg;
                             do
                             {
                                 flg = false;
@@ -452,19 +451,37 @@ namespace ChatTokenRing
                         frame.departure = (byte)userAddress;
                         SendFrame(frame);
                         SendFramesToken();
+                        flg = false;
+                        while (!Lnk.WaitOne(timeOut))
+                        {
+                            if (!Disc.WaitOne(1))
+                            {
+                                if (!flg)
+                                {
+                                    flg = true;
+                                    // !!! Соединение потеряно...
+                                }
+                            }
+                            else
+                            {
+                                Disc.Set();
+                                return;
+                            }
+                        }
+                        if (flg)
+                        {
+                            // !!! Соединение восстановлено
+                        }
                         break;
 
                     case Frame.Type.Uplink:
                         SendFrameToConnection((byte[])frame);
-                        // !!! Разрыв соединения на физическом уровне и/или выход из приложения на пользовательском
-                        unDisc.Set();
-                        Connection.ClosePorts();
-                        Chat.exit();
+                        Disc.Set();
+                        Connection.ClosePorts(); // Разрыв соединения на физическом уровне
+                        Chat.exit(); // Выход из приложения на пользовательском
                         break;
 
                     case Frame.Type.ACK:
-
-
                         if (userAddress != null)
                         {
                             if (frame.destination == (byte)userAddress)
