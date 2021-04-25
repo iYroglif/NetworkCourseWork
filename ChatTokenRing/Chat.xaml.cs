@@ -71,7 +71,7 @@ namespace ChatTokenRing
                         break;
                     }
                 }
-                if (!ckeck)
+                if (!ckeck && lb1.Items[0].ToString().Contains("*") == false)
                 {
                     lkl.Add(ul[b], stuck.Pop());
                     lb1.Dispatcher.Invoke(() =>
@@ -117,7 +117,7 @@ namespace ChatTokenRing
                             //FontStyle fontStyle = lb1.FontStyle;
                             //fontStyle
                             lb1.Items.Remove(lbl);
-                            lb1.Items.Insert(0, lbl);
+                            lb1.Items.Insert(0, lbl + "*");
                             //Style stol = new Style();
                             //stol.Setters.Add(new Setter { Property = Control.ForegroundProperty, Value = new SolidColorBrush(Colors.Black) });
                             //lb1.ItemContainerStyle = stol;
@@ -134,7 +134,7 @@ namespace ChatTokenRing
         private void button_Click(object sender, RoutedEventArgs e)
         {
             byte? address = null;
-            string user = lb1.SelectedItem.ToString().Trim(new char[] { '*' });
+            //string user = lb1.SelectedItem.ToString();//.Trim(new char[] { '*' });
             string massege = textBox.Text;
             foreach (var l in lkl)
             {
@@ -223,9 +223,13 @@ namespace ChatTokenRing
         private void listBox1_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string user = lb1.SelectedItem.ToString().Trim(new char[] { '*' });
+            string user1 = lb1.SelectedItem.ToString();
             panelka.Children.Clear();
-            lkl[user].Height=220;
+            lkl[user].Height = 220;
             panelka.Children.Add(lkl[user]);
+
+            lb1.Items.Remove(user1);
+            lb1.Items.Insert(0, user);
         }
 
         private void listBox1_Initialized(object sender, EventArgs e)
