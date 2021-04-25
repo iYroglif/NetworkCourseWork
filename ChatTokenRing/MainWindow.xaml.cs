@@ -43,8 +43,15 @@ namespace ChatTokenRing
                 {
                     string incomePort = comboBox.SelectedItem.ToString();
                     string outcomePort = comboBox1.SelectedItem.ToString();
-
                     chatWindow = new Chat();
+                    if (D.IsChecked == true)
+                    {
+                        chatWindow.Title = "Чат (Вы вошли как: " + textBoxUserName.Text + ") Ведущая станция";
+                    }
+                    else
+                    {
+                        chatWindow.Title = "Чат (Вы вошли как: " + textBoxUserName.Text + ")";
+                    }
                     DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text.Trim(new char[] { '*' }));
                     Application.Current.MainWindow.Hide();
                     chatWindow.Show();
