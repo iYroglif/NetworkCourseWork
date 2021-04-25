@@ -337,8 +337,7 @@ namespace ChatTokenRing
                             if (!flg)
                             {
                                 flg = true;
-                                Chat.connectionWait();
-                                // !!! Соединение потеряно... Восстановление соединения...
+                                Chat.connectionWait(); // Соединение потеряно... Восстановление соединения...
                             }
                             SendFrameToConnection((byte[])tmp); // Повторная отправка кадра
                         }
@@ -350,8 +349,7 @@ namespace ChatTokenRing
                     }
                     if (flg)
                     {
-                        // !!! Соединение восстановлено
-                        Chat.connectionRestored();
+                        Chat.connectionRestored(); // Соединение восстановлено
                     }
                 }
                 else // Для кадров без подтверждения успешной доставки
@@ -476,7 +474,7 @@ namespace ChatTokenRing
                                 if (!flg)
                                 {
                                     flg = true;
-                                    // !!! Соединение потеряно...
+                                    Chat.connectionWait(); // Соединение потеряно... Восстановление соединения...
                                 }
                             }
                             else
@@ -487,7 +485,7 @@ namespace ChatTokenRing
                         }
                         if (flg)
                         {
-                            // !!! Соединение восстановлено
+                            Chat.connectionRestored(); // Соединение восстановлено
                         }
                         break;
 
