@@ -13,7 +13,7 @@
         <TextBox x:Name="textBox" Text="Введите сообщение" LostFocus="textBox_LostFocus"  HorizontalAlignment="Left" Height="32" Margin="105,316,0,0" VerticalAlignment="Top" Width="429" KeyDown="textBox_KeyDown" GotFocus="textBox_GotFocus"/>
         <Button x:Name="button" Content="Отправка" HorizontalAlignment="Left" Margin="572,316,0,0" VerticalAlignment="Top" Width="117" Height="32" Click="button_Click"/>
 
-        <ListBox x:Name="listBox1" HorizontalAlignment="Left" Height="224" Margin="10,64,0,0" VerticalAlignment="Top" Width="72" MouseDoubleClick="listBox1_MouseDoubleClick" Initialized="listBox1_Initialized"/>
+        <ListBox x:Name="listBox1" HorizontalAlignment="Left" Height="220" Margin="10,64,0,0" VerticalAlignment="Top" Width="72" MouseDoubleClick="listBox1_MouseDoubleClick" Initialized="listBox1_Initialized"/>
         <StackPanel x:Name="panelka" HorizontalAlignment="Left" Height="224" Margin="105,64,0,0" VerticalAlignment="Top" Width="584" Initialized="panelka_Initialized">
 
         </StackPanel>
