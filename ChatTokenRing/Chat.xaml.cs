@@ -234,5 +234,15 @@ namespace ChatTokenRing
         {
             textBox.MaxLength = 127;
         }
+
+        public static void connectionWait()
+        {
+            MessageBox.Show("Соединение разорвано, ожидайте восстановления соединения", "Разрыв соединения");
+        }
+
+        public static void connectionRestored()
+        {
+            MessageBox.Show("Соединение восстановлено", "Соединение разорвано");
+        }
     }
 }
