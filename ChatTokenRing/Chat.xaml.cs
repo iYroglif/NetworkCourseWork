@@ -33,6 +33,7 @@ namespace ChatTokenRing
         {
             lkl = new Dictionary<string, ListBox>();
             lkl.Add("Общий", new ListBox());
+            lkl["Общий"].Height = 220;
             InitializeComponent();
             listBox1.Items.Add("Общий");
             listBox1.SelectedItem = listBox1.Items[0];
@@ -107,7 +108,7 @@ namespace ChatTokenRing
                 {
                     foreach (var lbl in lb1.Items)
                     {
-                        
+
                         if ((string)lbl == username1)
                         {
                             //Style styl = new Style();
@@ -133,7 +134,7 @@ namespace ChatTokenRing
         private void button_Click(object sender, RoutedEventArgs e)
         {
             byte? address = null;
-            string user = lb1.SelectedItem.ToString();
+            string user = lb1.SelectedItem.ToString().Trim(new char[] { '*' });
             string massege = textBox.Text;
             foreach (var l in lkl)
             {
@@ -154,9 +155,9 @@ namespace ChatTokenRing
                             }
                         }
                     }
-                    if(address!=0x7F && address!= usArd)
+                    if (address != 0x7F && address != usArd)
                     {
-                        l.Value.Items.Add(DateTime.Now.ToString("HH:mm") + " Вы: " +  massege);
+                        l.Value.Items.Add(DateTime.Now.ToString("HH:mm") + " Вы: " + massege);
                     }
                     break;
                 }
@@ -221,20 +222,20 @@ namespace ChatTokenRing
 
         private void listBox1_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            string user = lb1.SelectedItem.ToString();
+            string user = lb1.SelectedItem.ToString().Trim(new char[] { '*' });
             panelka.Children.Clear();
+            lkl[user].Height=220;
             panelka.Children.Add(lkl[user]);
         }
 
         private void listBox1_Initialized(object sender, EventArgs e)
         {
-            //listBox1.Items.Add("Общий");
-            //listBox1.SelectedItem = listBox1.Items[0];
+
         }
 
         private void panelka_Initialized(object sender, EventArgs e)
         {
-            //panelka.Children.Add(lkl["Общий"]);
+
         }
     }
 }
