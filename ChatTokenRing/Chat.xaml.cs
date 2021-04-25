@@ -229,5 +229,10 @@ namespace ChatTokenRing
         {
 
         }
+
+        private void textBox_Initialized(object sender, EventArgs e)
+        {
+            textBox.MaxLength = 127;
+        }
     }
 }
