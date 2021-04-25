@@ -20,28 +20,28 @@ namespace ChatTokenRing
     /// </summary>
     public partial class Chat : Window
     {
-        static System.Windows.Controls.ListBox lb1;
+        static System.Windows.Controls.ListBox listBoxListOfUserToDisplay;
         static Chat ths;
         static bool checkExit = false;
-        static Dictionary<byte, string> ul;
-        static Dictionary<string, ListBox> lkl;
+        static Dictionary<byte, string> dictionaryWithListOfUser;
+        static Dictionary<string, ListBox> dictionaryWithListBox;
         static Stack<ListBox> stuck;
-        static byte? usArd;
-        static StackPanel panel;
+        static byte? thisUserAddress;
+        static StackPanel staticVariableStackPanel;
 
         public Chat()
         {
-            lkl = new Dictionary<string, ListBox>();
-            lkl.Add("Общий", new ListBox());
-            lkl["Общий"].Height = 220;
+            dictionaryWithListBox = new Dictionary<string, ListBox>();
+            dictionaryWithListBox.Add("Общий", new ListBox());
+            dictionaryWithListBox["Общий"].Height = 220;
             InitializeComponent();
             listBox1.Items.Add("Общий");
             listBox1.SelectedItem = listBox1.Items[0];
-            panelka.Children.Add(lkl["Общий"]);
-            panel = panelka;
-            lb1 = listBox1;
+            StackPanel.Children.Add(dictionaryWithListBox["Общий"]);
+            staticVariableStackPanel = StackPanel;
+            listBoxListOfUserToDisplay = listBox1;
             ths = this;
-            ul = new Dictionary<byte, string>();
+            dictionaryWithListOfUser = new Dictionary<byte, string>();
             ListBox z1 = new ListBox();
             ListBox z2 = new ListBox();
             ListBox z3 = new ListBox();
@@ -57,26 +57,26 @@ namespace ChatTokenRing
 
         public static void List(Dictionary<byte, string> userLists, byte? userAddress)
         {
-            usArd = userAddress;
-            ul = userLists;
+            thisUserAddress = userAddress;
+            dictionaryWithListOfUser = userLists;
             bool ckeck = false;
-            foreach (byte b in ul.Keys)
+            foreach (byte b in dictionaryWithListOfUser.Keys)
             {
                 ckeck = false;
-                foreach (var item in lb1.Items)
+                foreach (var item in listBoxListOfUserToDisplay.Items)
                 {
-                    if ((string)item == ul[b])
+                    if ((string)item == dictionaryWithListOfUser[b])
                     {
                         ckeck = true;
                         break;
                     }
                 }
-                if (!ckeck && lb1.Items[0].ToString().Contains("*") == false)
+                if (!ckeck && listBoxListOfUserToDisplay.Items[0].ToString().Contains("*") == false)
                 {
-                    lkl.Add(ul[b], stuck.Pop());
-                    lb1.Dispatcher.Invoke(() =>
+                    dictionaryWithListBox.Add(dictionaryWithListOfUser[b], stuck.Pop());
+                    listBoxListOfUserToDisplay.Dispatcher.Invoke(() =>
                     {
-                        lb1.Items.Add(ul[b]);
+                        listBoxListOfUserToDisplay.Items.Add(dictionaryWithListOfUser[b]);
                     });
                 }
             }
@@ -86,11 +86,11 @@ namespace ChatTokenRing
         {
             string username = "";
             string username1 = "";
-            foreach (byte b in ul.Keys)
+            foreach (byte b in dictionaryWithListOfUser.Keys)
             {
                 if (b == userAdress)
                 {
-                    username = ul[b];
+                    username = dictionaryWithListOfUser[b];
                     break;
                 }
             }
@@ -102,67 +102,56 @@ namespace ChatTokenRing
             {
                 username1 = username;
             }
-            lkl[username1].Dispatcher.Invoke(() =>
+            dictionaryWithListBox[username1].Dispatcher.Invoke(() =>
             {
-                if (lkl[username1] != panel.Children[0])
+                if (dictionaryWithListBox[username1] != staticVariableStackPanel.Children[0])
                 {
-                    foreach (var lbl in lb1.Items)
+                    foreach (var lbl in listBoxListOfUserToDisplay.Items)
                     {
 
                         if ((string)lbl == username1)
                         {
-                            //Style styl = new Style();
-                            //styl.Setters.Add(new Setter { Property=Control.ForegroundProperty, Value=new SolidColorBrush(Colors.Red)});
-                            //lb1.ItemContainerStyle = styl;
-                            //FontStyle fontStyle = lb1.FontStyle;
-                            //fontStyle
-                            lb1.Items.Remove(lbl);
-                            lb1.Items.Insert(0, lbl + "*");
-                            //Style stol = new Style();
-                            //stol.Setters.Add(new Setter { Property = Control.ForegroundProperty, Value = new SolidColorBrush(Colors.Black) });
-                            //lb1.ItemContainerStyle = stol;
+                            listBoxListOfUserToDisplay.Items.Remove(lbl);
+                            listBoxListOfUserToDisplay.Items.Insert(0, lbl + "*");
                             break;
                         }
                     }
                 }
             });
-            //Thread.Sleep(50);
-            lkl[username1].Dispatcher.Invoke(() => { lkl[username1].Items.Add(DateTime.Now.ToString("HH:mm") + " " + username + ": " + message); });
-            //lb.Dispatcher.Invoke(() => { lb.Items.Add(DateTime.Now.ToString("HH:mm") + " " + username + ": " + message); });
+            dictionaryWithListBox[username1].Dispatcher.Invoke(() => { dictionaryWithListBox[username1].Items.Add(DateTime.Now.ToString("HH:mm") + " " + username + ": " + message); });
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            byte? address = null;
-            //string user = lb1.SelectedItem.ToString();//.Trim(new char[] { '*' });
-            string massege = textBox.Text;
-            foreach (var l in lkl)
+            byte? UserAddressToSendToDataLinkLayer = null;
+            string messageToSendToDataLinkLayer = textBox.Text;
+            foreach (var variableToIteratedictionaryWithListBox in dictionaryWithListBox)
             {
-                if (l.Value == panelka.Children[0])
+                if (variableToIteratedictionaryWithListBox.Value == StackPanel.Children[0])
                 {
-                    if (l.Key == "Общий")
+                    if (variableToIteratedictionaryWithListBox.Key == "Общий")
                     {
-                        address = 0x7F;
+                        UserAddressToSendToDataLinkLayer = 0x7F;
                     }
                     else
                     {
-                        foreach (var p in ul)
+                        foreach (var variableToIteratedictionaryWithListOfUser in dictionaryWithListOfUser)
                         {
-                            if (l.Key == p.Value)
+                            if (variableToIteratedictionaryWithListBox.Key == variableToIteratedictionaryWithListOfUser.Value)
                             {
-                                address = p.Key;
+                                UserAddressToSendToDataLinkLayer = variableToIteratedictionaryWithListOfUser.Key;
                                 break;
                             }
                         }
                     }
-                    if (address != 0x7F && address != usArd)
+                    if (UserAddressToSendToDataLinkLayer != 0x7F && UserAddressToSendToDataLinkLayer != thisUserAddress)
                     {
-                        l.Value.Items.Add(DateTime.Now.ToString("HH:mm") + " Вы: " + massege);
+                        variableToIteratedictionaryWithListBox.Value.Items.Add(DateTime.Now.ToString("HH:mm") + " Вы: " + messageToSendToDataLinkLayer);
                     }
                     break;
                 }
             }
-            DataLinkLayer.SendMessage(address, massege);
+            DataLinkLayer.SendMessage(UserAddressToSendToDataLinkLayer, messageToSendToDataLinkLayer);
             textBox.Clear();
         }
 
@@ -222,14 +211,13 @@ namespace ChatTokenRing
 
         private void listBox1_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            string user = lb1.SelectedItem.ToString().Trim(new char[] { '*' });
-            string user1 = lb1.SelectedItem.ToString();
-            panelka.Children.Clear();
-            lkl[user].Height = 220;
-            panelka.Children.Add(lkl[user]);
-
-            lb1.Items.Remove(user1);
-            lb1.Items.Insert(0, user);
+            string userWithSpecialCharacter = listBoxListOfUserToDisplay.SelectedItem.ToString().Trim(new char[] { '*' });
+            string userWithoutSpecialCharacter = listBoxListOfUserToDisplay.SelectedItem.ToString();
+            StackPanel.Children.Clear();
+            dictionaryWithListBox[userWithSpecialCharacter].Height = 220;
+            StackPanel.Children.Add(dictionaryWithListBox[userWithSpecialCharacter]);
+            listBoxListOfUserToDisplay.Items.Remove(userWithoutSpecialCharacter);
+            listBoxListOfUserToDisplay.Items.Insert(0, userWithSpecialCharacter);
         }
 
         private void listBox1_Initialized(object sender, EventArgs e)
@@ -237,7 +225,7 @@ namespace ChatTokenRing
 
         }
 
-        private void panelka_Initialized(object sender, EventArgs e)
+        private void StackPanel_Initialized(object sender, EventArgs e)
         {
 
         }
