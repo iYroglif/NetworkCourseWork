@@ -44,7 +44,6 @@ namespace ChatTokenRing
             incomePort.Handshake = Handshake.RequestToSend;
             incomePort.ReadBufferSize = 1024;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
-            incomePort.ReadTimeout = 50;
             incomePort.ReceivedBytesThreshold = 2;
 
 
@@ -55,7 +54,6 @@ namespace ChatTokenRing
             outcomePort.Handshake = Handshake.RequestToSend;
             outcomePort.WriteBufferSize = 1024;
             outcomePort.DtrEnable = true;
-            outcomePort.WriteTimeout = 50;
 
             // Открываем порты.
             if (!incomePort.IsOpen)
@@ -86,7 +84,6 @@ namespace ChatTokenRing
             // Закрываем порты.
             incomePort.Close();
             outcomePort.Close();
-            FrameIsRead.Reset();
 
             return (!incomePort.IsOpen && !outcomePort.IsOpen);
         }
@@ -96,14 +93,14 @@ namespace ChatTokenRing
         /// <summary>
         public static void SendBytes(byte[] outputVect)
         {
+            byte[] codedVect = CyclicCode.Coding(outputVect);
             lock (slocker)
             {
                 Thread.Sleep(50);
-                try
+                if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
                 {
-                    outcomePort.Write(outputVect, 0, outputVect.Length);
+                    outcomePort.Write(codedVect, 0, codedVect.Length);
                 }
-                catch { }
             }
         }
 
@@ -122,35 +119,15 @@ namespace ChatTokenRing
         /// </summary>
         static void ReadBytes()
         {
-            byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
-            lock (glocker)
+            if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
             {
-                int bytes = 0;
-                try
-                {
-                    bytes = incomePort.BytesToRead;
-                }
-                catch
-                {
-                    Thread.CurrentThread.Interrupt();
-                }
-                inputVect = new byte[bytes];
+                int bytes = incomePort.BytesToRead;
+                byte[] inputVect = new byte[bytes];
+                incomePort.Read(inputVect, 0, bytes);
 
-                // Записываем в массив данные от ком порта.
-                try
-                {
-                    incomePort.Read(inputVect, 0, bytes);
-                }
-                catch
-                {
-                    Thread.CurrentThread.Interrupt();
-                }
-            }
-
-            FrameIsRead.Set();
-            if (outcomePort.IsOpen)
-            {
-                DataLinkLayer.HandleFrame(inputVect);
+                FrameIsRead.Set();
+                byte[] encodedVect = CyclicCode.Decoding(inputVect);
+                DataLinkLayer.HandleFrame(encodedVect);
             }
         }
     }
