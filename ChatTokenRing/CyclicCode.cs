@@ -8,80 +8,67 @@ namespace ChatTokenRing
 {
     abstract class CyclicCode
     {
-        byte[] g_pol = new byte[4] { 1, 0, 1, 1 };
+        static int g_vect = 0b1011;
 
-
-        public byte[] Coding(byte[] double_vec)
+        static public byte[] Coding(byte[] inputVect)
         {
-            byte[] res = new byte[double_vec.Length * 8];
-            for (int i = 0; i < double_vec.Length; ++i)
+            byte[] res = new byte[inputVect.Length * 2];
+
+            for (int i = 0; i < inputVect.Length; i++)
             {
-                byte[] f_vec = new byte[4];
-                byte[] s_vec = new byte[4];
-                byte temp = double_vec[i];
-                for (int k = 0; k < 4; ++k)
-                {
-                    s_vec[k] = (byte)(temp % 2);
-                    temp /= 2;
-                }
-                for (int k = 0; k < 4; ++k)
-                {
-                    f_vec[k] = (byte)(temp % 2);
-                    temp /= 2;
-                }
+                int left_vect = (inputVect[i] & 0b11110000) >> 4;
+                int right_vect = inputVect[i] & 0b00001111;
 
-                /*
-                byte f_vec = (byte)(double_vec[i] & 0b11110000);
-                f_vec = (byte)(f_vec >> 4);
-                byte s_vec = (byte)(double_vec[i] & 0b00001111);
-                */
+                res[i * 2] = (byte)CyclicCoding(left_vect);
+                res[i * 2 + 1] = (byte)CyclicCoding(right_vect);
+            }
+            return res;
+        }
+        static public byte[] Decoding(byte[] inputVect)
+        {
+            byte[] res = new byte[inputVect.Length / 2];
 
-                CyclicCoding(f_vec).CopyTo(res, i * 14);
-                CyclicCoding(s_vec).CopyTo(res, i * 14 + 7);
+            for (int i = 0; i < inputVect.Length; i += 2)
+            {
+                int left_vect = inputVect[i];
+                int right_vect = inputVect[i + 1];
+
+                res[i / 2] = (byte)(((left_vect & 0b01111000) << 1) | ((right_vect & 0b01111000) >> 3));
             }
             return res;
         }
 
-        public byte[] CyclicCoding(byte[] vec)
+        static int CyclicCoding(int info_vect)
         {
-            byte[] c_vec = new byte[7];
-            for (int i = 3; i < 7; ++i)
-                c_vec[i] = vec[i - 3];
-            for (int i = 6; i > 2; --i)
-            {
-                if (c_vec[i] == 0)
-                    continue;
-                for (int k = 0; k < 4; ++k)
-                    c_vec[i - k] = (byte)(c_vec[i - k] ^ g_pol[3 - k]);
-            }
-            for (int i = 3; i < 7; ++i)
-                c_vec[i] = vec[i - 3];
-            return c_vec;
+            int coded_vect = info_vect << 3;
+
+            coded_vect = coded_vect | division(coded_vect);
+
+            return coded_vect;
         }
 
-        // ниже не сделано!!!
-        public int[] Error(int[] vec, int[] err_vec)
+        static bool ErrorCheck(int coded_vect)
         {
-            int[] a_vec = new int[15];
-            for (int i = 0; i < 15; ++i)
-                a_vec[i] = vec[i] ^ err_vec[i];
-            return a_vec;
+            if (division(coded_vect) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        public int[] Decoding(int[] vec)
+        static int division(int vect)
         {
-            int[] tmp = (int[])vec.Clone();
-            for (int i = 14; i > 3; --i)
+            for (int i = 6; i > 2; i--)
             {
-                if (tmp[i] == 0)
-                    continue;
-                for (int k = 0; k < 5; ++k)
-                    tmp[i - k] = tmp[i - k] ^ g_pol[4 - k];
+                if (vect >> i == 1)
+                {
+                    vect = vect ^ (g_vect << (i - 3));
+                }
             }
-            int[] synd = new int[4];
-            for (int i = 0; i < 4; ++i)
-                synd[i] = tmp[i];
-            return synd;
+            return vect;
         }
     }
 }
