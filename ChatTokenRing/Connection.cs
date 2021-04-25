@@ -14,9 +14,10 @@ namespace ChatTokenRing
         static object slocker = new object();
         static object glocker = new object();
 
+        private static AutoResetEvent FrameIsRead = new AutoResetEvent(false);
+
         static SerialPort incomePort;
         static SerialPort outcomePort;
-
         static bool isMaster;
 
         public static string[] GetPortsNames()
@@ -44,6 +45,7 @@ namespace ChatTokenRing
             incomePort.ReadBufferSize = 1024;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
             incomePort.ReadTimeout = 50;
+            incomePort.ReceivedBytesThreshold = 2;
 
 
             outcomePort.Parity = Parity.Even;
@@ -84,11 +86,14 @@ namespace ChatTokenRing
             // Закрываем порты.
             incomePort.Close();
             outcomePort.Close();
+            FrameIsRead.Reset();
 
             return (!incomePort.IsOpen && !outcomePort.IsOpen);
         }
 
-
+        /// <summary>
+        /// Отправка байтов
+        /// <summary>
         public static void SendBytes(byte[] outputVect)
         {
             lock (slocker)
@@ -98,10 +103,7 @@ namespace ChatTokenRing
                 {
                     outcomePort.Write(outputVect, 0, outputVect.Length);
                 }
-                catch
-                {
-
-                }
+                catch { }
             }
         }
 
@@ -112,7 +114,7 @@ namespace ChatTokenRing
         {
             Thread myThread = new Thread(new ThreadStart(ReadBytes));
             myThread.Start(); // запускаем поток
-                              //ReadBytes();
+            FrameIsRead.WaitOne();
         }
 
         /// <summary>
@@ -123,7 +125,6 @@ namespace ChatTokenRing
             byte[] inputVect; // тут возможно какой то поток сразу обнулит значение inputVect после выхода из lock -> ошибка
             lock (glocker)
             {
-                Thread.Sleep(10);
                 int bytes = 0;
                 try
                 {
@@ -144,15 +145,10 @@ namespace ChatTokenRing
                 {
                     Thread.CurrentThread.Interrupt();
                 }
-
-                foreach (byte inputByte in inputVect)
-                {
-                    Console.Write(inputByte + " ");
-                }
-                Console.WriteLine();
-
             }
-            if (inputVect.Length > 2)
+
+            FrameIsRead.Set();
+            if (outcomePort.IsOpen)
             {
                 DataLinkLayer.HandleFrame(inputVect);
             }
