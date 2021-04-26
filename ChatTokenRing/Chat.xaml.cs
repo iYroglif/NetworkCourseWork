@@ -61,13 +61,13 @@ namespace ChatTokenRing
                 ckeck = false;
                 foreach (var item in listBoxListOfUserToDisplay.Items)
                 {
-                    if ((string)item == dictionaryWithListOfUser[b])
+                    if (item.ToString().TrimEnd(new char[] { '*' }) == dictionaryWithListOfUser[b])
                     {
                         ckeck = true;
                         break;
                     }
                 }
-                if (!ckeck && listBoxListOfUserToDisplay.Items[0].ToString().Contains("*") == false)
+                if (!ckeck && !listBoxListOfUserToDisplay.Items[0].ToString().Contains("*"))
                 {
                     dictionaryWithListBox.Add(dictionaryWithListOfUser[b], stackOfListBox.Pop());
                     listBoxListOfUserToDisplay.Dispatcher.Invoke(() =>
@@ -105,7 +105,7 @@ namespace ChatTokenRing
                     foreach (var lbl in listBoxListOfUserToDisplay.Items)
                     {
 
-                        if ((string)lbl == username1)
+                        if (lbl.ToString() == username1)
                         {
                             listBoxListOfUserToDisplay.Items.Remove(lbl);
                             listBoxListOfUserToDisplay.Items.Insert(0, lbl + "*");
