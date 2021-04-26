@@ -25,9 +25,10 @@ namespace ChatTokenRing
         static bool checkExit = false;
         static Dictionary<byte, string> dictionaryWithListOfUser;
         static Dictionary<string, ListBox> dictionaryWithListBox;
-        static Stack<ListBox> stuck;
+        static Stack<ListBox> stackOfListBox;
         static byte? thisUserAddress;
         static StackPanel staticVariableStackPanel;
+        static Ellipse connectionStatus;
 
         public Chat()
         {
@@ -41,18 +42,13 @@ namespace ChatTokenRing
             staticVariableStackPanel = StackPanel;
             listBoxListOfUserToDisplay = listBox1;
             ths = this;
+            connectionStatus = ellipse;
             dictionaryWithListOfUser = new Dictionary<byte, string>();
-            ListBox z1 = new ListBox();
-            ListBox z2 = new ListBox();
-            ListBox z3 = new ListBox();
-            ListBox z4 = new ListBox();
-            ListBox z5 = new ListBox();
-            stuck = new Stack<ListBox>();
-            stuck.Push(z1);
-            stuck.Push(z2);
-            stuck.Push(z3);
-            stuck.Push(z4);
-            stuck.Push(z5);
+            stackOfListBox = new Stack<ListBox>();
+            for (int i = 0; i < 20; i++)
+            {
+                stackOfListBox.Push(new ListBox());
+            }
         }
 
         public static void List(Dictionary<byte, string> userLists, byte? userAddress)
@@ -73,7 +69,7 @@ namespace ChatTokenRing
                 }
                 if (!ckeck && listBoxListOfUserToDisplay.Items[0].ToString().Contains("*") == false)
                 {
-                    dictionaryWithListBox.Add(dictionaryWithListOfUser[b], stuck.Pop());
+                    dictionaryWithListBox.Add(dictionaryWithListOfUser[b], stackOfListBox.Pop());
                     listBoxListOfUserToDisplay.Dispatcher.Invoke(() =>
                     {
                         listBoxListOfUserToDisplay.Items.Add(dictionaryWithListOfUser[b]);
@@ -195,6 +191,7 @@ namespace ChatTokenRing
 
         public static void exit()
         {
+            connectionStatus.Dispatcher.Invoke(() => { connectionStatus.Fill = Brushes.Red; });
             if (MessageBox.Show("Другой пользователь вышел из программы, разрыв соединения", "Разрыв соединения", MessageBoxButton.OK) == MessageBoxResult.OK)
             {
                 ths.Dispatcher.Invoke(() => { checkExit = true; ths.Close(); });
@@ -218,6 +215,7 @@ namespace ChatTokenRing
             StackPanel.Children.Add(dictionaryWithListBox[userWithSpecialCharacter]);
             listBoxListOfUserToDisplay.Items.Remove(userWithoutSpecialCharacter);
             listBoxListOfUserToDisplay.Items.Insert(0, userWithSpecialCharacter);
+            listBoxListOfUserToDisplay.SelectedItem = listBoxListOfUserToDisplay.Items[0];
         }
 
         private void listBox1_Initialized(object sender, EventArgs e)
@@ -237,12 +235,12 @@ namespace ChatTokenRing
 
         public static void connectionWait()
         {
-            MessageBox.Show("Соединение разорвано, ожидайте восстановления соединения", "Разрыв соединения");
+            connectionStatus.Dispatcher.Invoke(() => { connectionStatus.Fill = Brushes.Red; });
         }
 
         public static void connectionRestored()
         {
-            MessageBox.Show("Соединение восстановлено", "Соединение разорвано");
+            connectionStatus.Dispatcher.Invoke(() => { connectionStatus.Fill = Brushes.Green; });
         }
     }
 }
