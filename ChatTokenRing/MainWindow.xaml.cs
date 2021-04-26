@@ -41,8 +41,8 @@ namespace ChatTokenRing
                 }
                 else
                 {
-                    string incomePort = comboBox.SelectedItem.ToString();
-                    string outcomePort = comboBox1.SelectedItem.ToString();
+                    string outcomePort = comboBox.SelectedItem.ToString();
+                    string incomePort = comboBox1.SelectedItem.ToString();
                     chatWindow = new Chat();
                     if (D.IsChecked == true)
                     {

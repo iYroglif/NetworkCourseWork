@@ -74,6 +74,7 @@ namespace ChatTokenRing
                     {
                         listBoxListOfUserToDisplay.Items.Add(dictionaryWithListOfUser[b]);
                     });
+                    break;
                 }
             }
         }

@@ -248,7 +248,7 @@ namespace ChatTokenRing
 
     abstract class DataLinkLayer
     {
-        static int timeOut = 2000; // Стандартный тайм-аут
+        static int timeOut = 2000; // Начальный тайм-аут
         static byte? userAddress = null; // Адрес пользователя
         static string userNickname; // Никнейм пользователя
         static Queue<Frame> sendingFrames = new Queue<Frame>(); // Буфер ожидающих к отправлению сообщений (ждущих маркер)
@@ -269,6 +269,7 @@ namespace ChatTokenRing
             recdRet = new AutoResetEvent(false); // Обнуление статических переменных
             Disc = new AutoResetEvent(false); // Обнуление статических переменных
             Lnk = new AutoResetEvent(false); // Обнуление статических переменных
+            timeOut = 2000; // Обнуление статических переменных
 
             Connection.OpenPorts(incomePortName, outcomePortName, isMaster); // Установка физического соединения
             if (isMaster) // Если станция ведущая
@@ -391,7 +392,7 @@ namespace ChatTokenRing
                     if (decoded.Item2 || (!frame.TryConvertFromBytes(decoded.Item1))) // Если при декодировании циклическим кодом была выявлена ошибка или не удалась попытка восстановить кадр из массива байтов, то отправляем запрос на повторную отправку
                     {
                         Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
-                        SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure)); // Запрос на повторную отправку
+                        SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des: frame.departure)); // Запрос на повторную отправку
                     }
                     else
                     {
@@ -429,11 +430,19 @@ namespace ChatTokenRing
                                 Lnk.Set(); // Событие прихода маркера
                                 Dictionary<byte, string> users = new Dictionary<byte, string>(); // Словарь пользователей
 
-                                string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
-                                foreach (string item in items)
+                                try // Если нет ошибок при обработке списка 
                                 {
-                                    string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-                                    users.Add(Convert.ToByte(tmp[0]), tmp[1]);
+                                    string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
+                                    foreach (string item in items)
+                                    {
+                                        string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
+                                        users.Add(Convert.ToByte(tmp[0]), tmp[1]);
+                                    }
+                                }
+                                catch // Если произошла ошибка запрос на повторную отправку
+                                {
+                                    SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des: frame.departure)); // Запрос на повторную отправку
+                                    return;
                                 }
 
                                 Chat.List(users, userAddress); // Передача списка пользователей на пользовательский уровень
@@ -465,6 +474,7 @@ namespace ChatTokenRing
                                     frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
                                     frame.data_length = (byte?)frame.data.Length;
                                 }
+                                timeOut = (int)(users.Count * 1.5 * 1000); // Значение тайм-аута зависит от количества пользователей
                                 SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
                                 frame.departure = (byte)userAddress;
                                 SendFrame(frame);
