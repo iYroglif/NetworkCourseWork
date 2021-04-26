@@ -27,7 +27,7 @@ namespace ChatTokenRing
         public MainWindow()
         {
             InitializeComponent();
-
+            this.ResizeMode = System.Windows.ResizeMode.CanMinimize;
         }
 
         private void buttonConnection_Click(object sender, RoutedEventArgs e)
@@ -52,6 +52,7 @@ namespace ChatTokenRing
                     {
                         chatWindow.Title = "Чат (Вы вошли как: " + textBoxUserName.Text + ")";
                     }
+                    chatWindow.ResizeMode = System.Windows.ResizeMode.CanMinimize;
                     DataLinkLayer.OpenConnection(incomePort, outcomePort, (bool)D.IsChecked, textBoxUserName.Text.Trim(new char[] { '*' }));
                     Application.Current.MainWindow.Hide();
                     chatWindow.Show();
