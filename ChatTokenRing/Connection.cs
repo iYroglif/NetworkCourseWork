@@ -119,16 +119,25 @@ namespace ChatTokenRing
         /// </summary>
         static void ReadBytes()
         {
-            if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
+            byte[] inputVect = new byte[0];
+            lock (glocker)
             {
-                int bytes = incomePort.BytesToRead;
-                byte[] inputVect = new byte[bytes];
-                incomePort.Read(inputVect, 0, bytes);
+                if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
+                {
+                    int bytes = incomePort.BytesToRead;
+                    inputVect = new byte[bytes];
+                    incomePort.Read(inputVect, 0, bytes);
+                    foreach (var i in inputVect)
+                    {
+                        Console.Write(i.ToString() + " ");
+                    }
+                    Console.WriteLine();
 
-                FrameIsRead.Set();
-                //byte[] encodedVect = CyclicCode.Decoding(inputVect);
-                DataLinkLayer.HandleFrame(inputVect);
+                    FrameIsRead.Set();
+                    //byte[] encodedVect = CyclicCode.Decoding(inputVect);
+                }
             }
+            DataLinkLayer.HandleFrame(inputVect);
         }
     }
 }
