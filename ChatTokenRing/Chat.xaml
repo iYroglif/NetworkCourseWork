@@ -16,5 +16,6 @@
         <StackPanel x:Name="StackPanel" HorizontalAlignment="Left" Height="224" Margin="105,64,0,0" VerticalAlignment="Top" Width="584" Initialized="StackPanel_Initialized">
 
         </StackPanel>
+        <Ellipse Fill="Green" x:Name="ellipse" HorizontalAlignment="Left" Height="12" Margin="39,328,0,0" Stroke="Black" VerticalAlignment="Top" Width="12" RenderTransformOrigin="0.938,1.788" ToolTip="Статус соединения"/>
     </Grid>
 </Window>
