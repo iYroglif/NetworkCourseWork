@@ -17,6 +17,6 @@
 
         </StackPanel>
         <Ellipse Fill="Green" x:Name="ellipse" HorizontalAlignment="Left" Height="12" Margin="39,328,0,0" Stroke="Black" VerticalAlignment="Top" Width="12" RenderTransformOrigin="0.938,1.788" ToolTip="Статус соединения"/>
-        <Label x:Name="label" Content="Все чаты:" HorizontalAlignment="Left" Margin="10,24,0,0" VerticalAlignment="Top" Height="35" Width="72"/>
+        <Label x:Name="label" Content="Все чаты:" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" Height="26" Width="72"/>
     </Grid>
 </Window>
