@@ -44,7 +44,8 @@ namespace ChatTokenRing
             incomePort.Handshake = Handshake.RequestToSend;
             incomePort.ReadBufferSize = 1024;
             incomePort.DataReceived += new SerialDataReceivedEventHandler(RecieveBytes);
-            incomePort.ReceivedBytesThreshold = 2;
+            incomePort.ReceivedBytesThreshold = 4;
+            incomePort.ReadTimeout = 100;
 
 
             outcomePort.Parity = Parity.Even;
@@ -54,6 +55,7 @@ namespace ChatTokenRing
             outcomePort.Handshake = Handshake.RequestToSend;
             outcomePort.WriteBufferSize = 1024;
             outcomePort.DtrEnable = true;
+            outcomePort.WriteTimeout = 100;
 
             // Открываем порты.
             if (!incomePort.IsOpen)
@@ -99,7 +101,14 @@ namespace ChatTokenRing
                 Thread.Sleep(10);
                 if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
                 {
-                    outcomePort.Write(codedVect, 0, codedVect.Length);
+                    try
+                    {
+                        outcomePort.Write(codedVect, 0, codedVect.Length);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Connection is closed.");
+                    }
                 }
             }
         }
@@ -122,12 +131,45 @@ namespace ChatTokenRing
             if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
             {
                 int bytes = incomePort.BytesToRead;
-                byte[] inputVect = new byte[bytes];
-                incomePort.Read(inputVect, 0, bytes);
+                byte[] inputBytes = new byte[bytes];
+                incomePort.Read(inputBytes, 0, bytes);
 
-                FrameIsRead.Set();
+                List<byte> inputVect = new List<byte>();
+                bool StartByteIsMet = false;
+
+                for (int i = 0; i < bytes; i += 2)
+                {
+                    if (inputBytes[i] == 0x7F && inputBytes[i + 1] == 0x7F)
+                    {
+                        inputVect.Add(0x7F);
+                        inputVect.Add(0x7F);
+
+                        if (StartByteIsMet)
+                        {
+                            StartByteIsMet = false;
+                            FrameIsRead.Set();
+                            DataLinkLayer.HandleFrame(inputVect.ToArray());
+                            inputVect.Clear();
+                        }
+                        else
+                        {
+                            StartByteIsMet = true;
+                        }
+                    }
+                    else
+                    {
+                        inputVect.Add(inputBytes[i]);
+                        inputVect.Add(inputBytes[i + 1]);
+                    }
+                }
+
+                //FrameIsRead.Set();
                 //byte[] encodedVect = CyclicCode.Decoding(inputVect);
-                DataLinkLayer.HandleFrame(inputVect);
+                //DataLinkLayer.HandleFrame(inputVect);
+            }
+            else
+            {
+                FrameIsRead.Set();
             }
         }
     }
