@@ -96,7 +96,7 @@ namespace ChatTokenRing
             byte[] codedVect = CyclicCode.Coding(outputVect);
             lock (slocker)
             {
-                Thread.Sleep(50);
+                Thread.Sleep(10);
                 if (outcomePort.IsOpen && incomePort.IsOpen && incomePort.DsrHolding)
                 {
                     outcomePort.Write(codedVect, 0, codedVect.Length);
@@ -126,8 +126,8 @@ namespace ChatTokenRing
                 incomePort.Read(inputVect, 0, bytes);
 
                 FrameIsRead.Set();
-                byte[] encodedVect = CyclicCode.Decoding(inputVect);
-                DataLinkLayer.HandleFrame(encodedVect);
+                //byte[] encodedVect = CyclicCode.Decoding(inputVect);
+                DataLinkLayer.HandleFrame(inputVect);
             }
         }
     }
