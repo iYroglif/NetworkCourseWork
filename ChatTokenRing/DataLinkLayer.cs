@@ -382,149 +382,156 @@ namespace ChatTokenRing
         /// </summary>
         static public void HandleFrame(byte[] bytes)
         {
-            Frame frame = new Frame();
-            if (!frame.TryConvertFromBytes(bytes)) // Попытка восстановить кадр из массива байтов
+            (byte[], bool) decoded = CyclicCode.Decoding(bytes); // Декодирование пришедших байтов циклическим кодом
+            if (decoded.Item1.Length > 4) // Если пришел пакет а не какие-нибудь помехи (минимальный размер пакета в кольце)
             {
-                Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
-                SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure)); // Запрос на повторную отправку
-            }
-            else
-            {
-                switch (frame.type)
+                if ((decoded.Item1[0] == 0xFF) && (decoded.Item1[decoded.Item1.Length - 1] == 0xFF)) // Если пришел пакет а не какие-нибудь помехи (проверка по стартовому и стоповому байту)
                 {
-                    case Frame.Type.I: // Обработка информационного кадра
-                        if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress)) // Если кадр предназначен этой станции
+                    Frame frame = new Frame();
+                    if (decoded.Item2 || (!frame.TryConvertFromBytes(decoded.Item1))) // Если при декодировании циклическим кодом была выявлена ошибка или не удалась попытка восстановить кадр из массива байтов, то отправляем запрос на повторную отправку
+                    {
+                        Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
+                        SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des:/* ??? в идеале соседний комп с ком порта потому что ошибки могут быть и с адресом отправителя */frame.departure)); // Запрос на повторную отправку
+                    }
+                    else
+                    {
+                        switch (frame.type)
                         {
-                            if (frame.destination != 0x7F)
-                            {
-                                if (frame.departure == (byte)userAddress)
+                            case Frame.Type.I: // Обработка информационного кадра
+                                if ((frame.destination == 0x7F) || (frame.destination == (byte)userAddress)) // Если кадр предназначен этой станции
                                 {
-                                    waitACC.Set(); // Нет смысла посылать кадр об успешной доставке самому себе
+                                    if (frame.destination != 0x7F)
+                                    {
+                                        if (frame.departure == (byte)userAddress)
+                                        {
+                                            waitACC.Set(); // Нет смысла посылать кадр об успешной доставке самому себе
+                                        }
+                                        else
+                                        {
+                                            SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
+                                        }
+                                    }
+
+                                    Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure, frame.destination); // Передача сообщения на пользовательский уровень
+
+                                    if ((frame.destination == 0x7F) && (frame.departure != userAddress))
+                                    {
+                                        SendFrame(frame);
+                                    }
                                 }
                                 else
                                 {
-                                    SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
+                                    SendFrameToConnection((byte[])frame);
                                 }
-                            }
+                                break;
 
-                            Chat.inMessage(Encoding.UTF8.GetString(frame.data, 0, frame.data.Length), frame.departure, frame.destination); // Передача сообщения на пользовательский уровень
+                            case Frame.Type.Link: // Обработка маркера
+                                Lnk.Set(); // Событие прихода маркера
+                                Dictionary<byte, string> users = new Dictionary<byte, string>(); // Словарь пользователей
 
-                            if ((frame.destination == 0x7F) && (frame.departure != userAddress))
-                            {
-                                SendFrame(frame);
-                            }
-                        }
-                        else
-                        {
-                            SendFrameToConnection((byte[])frame);
-                        }
-                        break;
-
-                    case Frame.Type.Link: // Обработка маркера
-                        Lnk.Set(); // Событие прихода маркера
-                        Dictionary<byte, string> users = new Dictionary<byte, string>(); // Словарь пользователей
-
-                        string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (string item in items)
-                        {
-                            string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-                            users.Add(Convert.ToByte(tmp[0]), tmp[1]);
-                        }
-
-                        Chat.List(users, userAddress); // Передача списка пользователей на пользовательский уровень
-
-                        if (userAddress == null)
-                        {
-                            userAddress = (byte?)(users.Last().Key + 1);
-                        }
-
-                        // Если пользователь с таким именем уже есть
-                        bool flg;
-                        if (!users.ContainsKey((byte)userAddress))
-                        {
-                            do
-                            {
-                                flg = false;
-                                foreach (var us in users)
+                                string[] items = Encoding.UTF8.GetString(frame.data, 0, frame.data.Length).Split(new string[] { "][" }, StringSplitOptions.RemoveEmptyEntries);
+                                foreach (string item in items)
                                 {
-                                    if (us.Value == userNickname)
+                                    string[] tmp = item.Trim('[', ']').Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
+                                    users.Add(Convert.ToByte(tmp[0]), tmp[1]);
+                                }
+
+                                Chat.List(users, userAddress); // Передача списка пользователей на пользовательский уровень
+
+                                if (userAddress == null)
+                                {
+                                    userAddress = (byte?)(users.Last().Key + 1);
+                                }
+
+                                // Если пользователь с таким именем уже есть
+                                bool flg;
+                                if (!users.ContainsKey((byte)userAddress))
+                                {
+                                    do
                                     {
-                                        userNickname += " (1)";
-                                        flg = true;
-                                        break;
+                                        flg = false;
+                                        foreach (var us in users)
+                                        {
+                                            if (us.Value == userNickname)
+                                            {
+                                                userNickname += " (1)";
+                                                flg = true;
+                                                break;
+                                            }
+                                        }
+                                    } while (flg);
+
+                                    users.Add((byte)userAddress, userNickname);
+                                    frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
+                                    frame.data_length = (byte?)frame.data.Length;
+                                }
+                                SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
+                                frame.departure = (byte)userAddress;
+                                SendFrame(frame);
+                                SendFramesToken(); // Отправка сообщений с захваченным маркером
+
+                                // Ожидание возвращения маркера (проверка целостности соединения)
+                                flg = false;
+                                while (!Lnk.WaitOne(timeOut))
+                                {
+                                    if (!Disc.WaitOne(1))
+                                    {
+                                        if (!flg)
+                                        {
+                                            flg = true;
+                                            Chat.connectionWait(); // Соединение потеряно... Восстановление соединения...
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Disc.Set();
+                                        return;
                                     }
                                 }
-                            } while (flg);
-
-                            users.Add((byte)userAddress, userNickname);
-                            frame.data = Encoding.UTF8.GetBytes(string.Join(null, users));
-                            frame.data_length = (byte?)frame.data.Length;
-                        }
-                        SendFrame(new Frame((byte)userAddress, Frame.Type.ACK, des: frame.departure)); // Отправка кадра подтверждения безошибочного приема кадра
-                        frame.departure = (byte)userAddress;
-                        SendFrame(frame);
-                        SendFramesToken(); // Отправка сообщений с захваченным маркером
-
-                        // Ожидание возвращения маркера (проверка целостности соединения)
-                        flg = false;
-                        while (!Lnk.WaitOne(timeOut))
-                        {
-                            if (!Disc.WaitOne(1))
-                            {
-                                if (!flg)
+                                if (flg)
                                 {
-                                    flg = true;
-                                    Chat.connectionWait(); // Соединение потеряно... Восстановление соединения...
+                                    Chat.connectionRestored(); // Соединение восстановлено
                                 }
-                            }
-                            else
-                            {
-                                Disc.Set();
-                                return;
-                            }
-                        }
-                        if (flg)
-                        {
-                            Chat.connectionRestored(); // Соединение восстановлено
-                        }
-                        break;
+                                break;
 
-                    case Frame.Type.Dis: // Обработка кадра разрыва соединения
-                        SendFrameToConnection((byte[])frame); // Отправка кадра разрыва соединения
-                        Disc.Set(); // Событие прихода кадра разрыва соединения
+                            case Frame.Type.Dis: // Обработка кадра разрыва соединения
+                                SendFrameToConnection((byte[])frame); // Отправка кадра разрыва соединения
+                                Disc.Set(); // Событие прихода кадра разрыва соединения
 
-                        Connection.ClosePorts(); // Разрыв соединения на физическом уровне
-                        Chat.exit(); // Выход из приложения на пользовательском уровне
-                        break;
+                                Connection.ClosePorts(); // Разрыв соединения на физическом уровне
+                                Chat.exit(); // Выход из приложения на пользовательском уровне
+                                break;
 
-                    case Frame.Type.ACK: // Обработка кадра подтверждения безошибочного приема кадра
-                        if (userAddress != null)
-                        {
-                            if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
-                            {
-                                waitACC.Set(); // Событие прихода кадра подтверждения безошибочного приема кадра
-                            }
-                            else // Если кадр предназначался НЕ этой станции
-                            {
-                                SendFrame(frame);
-                            }
-                        }
-                        else // Если кадр предназначался НЕ этой станции
-                        {
-                            SendFrame(frame);
-                        }
-                        break;
+                            case Frame.Type.ACK: // Обработка кадра подтверждения безошибочного приема кадра
+                                if (userAddress != null)
+                                {
+                                    if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
+                                    {
+                                        waitACC.Set(); // Событие прихода кадра подтверждения безошибочного приема кадра
+                                    }
+                                    else // Если кадр предназначался НЕ этой станции
+                                    {
+                                        SendFrame(frame);
+                                    }
+                                }
+                                else // Если кадр предназначался НЕ этой станции
+                                {
+                                    SendFrame(frame);
+                                }
+                                break;
 
-                    case Frame.Type.Ret: // Обработка кадра запроса повторения последнего отправленного кадра
-                        if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
-                        {
-                            recdRet.Set(); // Событие прихода кадра запроса повторения последнего отправленного кадра
+                            case Frame.Type.Ret: // Обработка кадра запроса повторения последнего отправленного кадра
+                                if (frame.destination == (byte)userAddress) // Если кадр предназначался этой станции
+                                {
+                                    recdRet.Set(); // Событие прихода кадра запроса повторения последнего отправленного кадра
+                                }
+                                else // Если кадр предназначался НЕ этой станции
+                                {
+                                    SendFrame(frame);
+                                }
+                                break;
                         }
-                        else // Если кадр предназначался НЕ этой станции
-                        {
-                            SendFrame(frame);
-                        }
-                        break;
+                    }
                 }
             }
         }
