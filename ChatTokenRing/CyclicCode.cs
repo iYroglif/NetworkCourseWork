@@ -27,23 +27,30 @@ namespace ChatTokenRing
         static public (byte[], bool) Decoding(byte[] inputVect)
         {
             byte[] res = new byte[inputVect.Length / 2];
-            bool hasError = false;
-
-            for (int i = 0; i < inputVect.Length; i += 2)
+            try
             {
-                int left_vect = inputVect[i];
-                int right_vect = inputVect[i + 1];
-                if (!hasError)
-                {
-                    if (!ErrorCheck(left_vect) || !ErrorCheck(right_vect))
-                    {
-                        hasError = true;
-                    }
-                }
+                bool hasError = false;
 
-                res[i / 2] = (byte)(((left_vect & 0b01111000) << 1) | ((right_vect & 0b01111000) >> 3));
+                for (int i = 0; i < inputVect.Length; i += 2)
+                {
+                    int left_vect = inputVect[i];
+                    int right_vect = inputVect[i + 1];
+                    if (!hasError)
+                    {
+                        if (!ErrorCheck(left_vect) || !ErrorCheck(right_vect))
+                        {
+                            hasError = true;
+                        }
+                    }
+
+                    res[i / 2] = (byte)(((left_vect & 0b01111000) << 1) | ((right_vect & 0b01111000) >> 3));
+                }
+                return (res, hasError);
             }
-            return (res, hasError);
+            catch
+            {
+                return (res, true);
+            }
         }
 
         static int CyclicCoding(int info_vect)

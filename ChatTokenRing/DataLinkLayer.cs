@@ -391,7 +391,6 @@ namespace ChatTokenRing
                     Frame frame = new Frame();
                     if (decoded.Item2 || (!frame.TryConvertFromBytes(decoded.Item1))) // Если при декодировании циклическим кодом была выявлена ошибка или не удалась попытка восстановить кадр из массива байтов, то отправляем запрос на повторную отправку
                     {
-                        Debug.Assert(false, "Ошибка: нужен запрос на повторную отправку и повторная отправка");
                         SendFrame(new Frame((byte)userAddress, Frame.Type.Ret, des: frame.departure)); // Запрос на повторную отправку
                     }
                     else
