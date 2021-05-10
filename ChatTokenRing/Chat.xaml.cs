@@ -29,6 +29,8 @@ namespace ChatTokenRing
         static byte? thisUserAddress;
         static StackPanel staticVariableStackPanel;
         static Ellipse connectionStatus;
+        static TextBox messageInputer;
+        static Button buttonToSend;
 
         public Chat()
         {
@@ -41,6 +43,8 @@ namespace ChatTokenRing
             StackPanel.Children.Add(dictionaryWithListBox["Общий"]);
             staticVariableStackPanel = StackPanel;
             listBoxListOfUserToDisplay = listBox1;
+            messageInputer = textBox;
+            buttonToSend = button;
             ths = this;
             connectionStatus = ellipse;
             dictionaryWithListOfUser = new Dictionary<byte, string>();
@@ -237,11 +241,23 @@ namespace ChatTokenRing
         public static void connectionWait()
         {
             connectionStatus.Dispatcher.Invoke(() => { connectionStatus.Fill = Brushes.Red; });
+            messageInputer.Dispatcher.Invoke(() =>
+            {
+                messageInputer.IsReadOnly = true;
+                messageInputer.Text = "Разрыв соединения, ожидайте восстановления соединения";
+                buttonToSend.IsEnabled = false;
+            });
         }
 
         public static void connectionRestored()
         {
             connectionStatus.Dispatcher.Invoke(() => { connectionStatus.Fill = Brushes.Green; });
+            messageInputer.Dispatcher.Invoke(() =>
+            {
+                messageInputer.IsReadOnly = false;
+                messageInputer.Text = "Введите сообщение";
+                buttonToSend.IsEnabled = true;
+            });
         }
     }
 }
