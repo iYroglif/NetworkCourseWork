@@ -68,13 +68,10 @@ namespace ChatTokenRing
                 outcomePort.Open();
             }
 
-            //if (isMaster)
-            //{
-                while (!outcomePort.DsrHolding || !incomePort.DsrHolding)
-                {
-                    Thread.Sleep(100);
-                }
-            //}
+            while (!outcomePort.DsrHolding || !incomePort.DsrHolding)
+            {
+                Thread.Sleep(50);
+            }
 
             return (incomePort.IsOpen && outcomePort.IsOpen);
         }
@@ -131,18 +128,12 @@ namespace ChatTokenRing
         {
             byte[] inputVect = new byte[0];
             lock (glocker)
-            {//!!!!
+            {
                 if (outcomePort.IsOpen && incomePort.IsOpen)
                 {
                     int bytes = incomePort.BytesToRead;
                     inputVect = new byte[bytes];
                     incomePort.Read(inputVect, 0, bytes);
-                    foreach (var i in inputVect)
-                    {
-                        Console.Write(i.ToString() + " ");
-                    }
-                    Console.WriteLine();
-                    //byte[] encodedVect = CyclicCode.Decoding(inputVect);
                 }
             }
             FrameIsRead.Set();
@@ -150,3 +141,4 @@ namespace ChatTokenRing
         }
     }
 }
+
