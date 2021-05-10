@@ -247,7 +247,6 @@ namespace ChatTokenRing
                 messageInputer.Text = "Разрыв соединения, ожидайте восстановления соединения";
                 buttonToSend.IsEnabled = false;
             });
-            //textBox1.Text = "Разрыв соединения, ожидайте восстановления соединения";
         }
 
         public static void connectionRestored()
@@ -259,8 +258,6 @@ namespace ChatTokenRing
                 messageInputer.Text = "Введите сообщение";
                 buttonToSend.IsEnabled = true;
             });
-            //textBox1.Text = "Разрыв соединения, ожидайте восстановления соединения";
-            //textBox1.IsReadOnly = false;
         }
     }
 }
