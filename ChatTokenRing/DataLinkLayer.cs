@@ -440,6 +440,7 @@ namespace ChatTokenRing
 
                                 // Ожидание возвращения маркера (проверка целостности соединения)
                                 bool flg = false;
+                                Tkn.Reset();
                                 while (!Tkn.WaitOne(timeOut))
                                 {
                                     if (!Disc.WaitOne(1))
